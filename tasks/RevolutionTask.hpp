@@ -102,8 +102,11 @@ namespace deep_trekker{
         void cleanupHook();
 
     private:
+        CommandAndStateMessageParser mMessageParser;
         DevicesMacAddress mDevicesMacAddress;
         void queryDeviceStateInfo();
+        DevicesInfo getDevicesInfo();
+
     };
 }
 

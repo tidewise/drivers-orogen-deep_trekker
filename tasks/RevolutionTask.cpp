@@ -45,71 +45,46 @@ void RevolutionTask::updateHook()
         return;
     }
 
-    string data_diagnostics;
-    data_diagnostics.assign(data_in.data.begin(), data_in.data.end());
-    
-    // TODO - call lib to parser
+    string error;
+    string data_str(data_in.data.begin(), data_in.data.end());
+    if (!mMessageParser.parseJSONMessage(data_str.c_str(), error))
+    {
+        throw invalid_argument(error);
+    }
 
-    Revolution diagnostics;
-    _deep_trekker_diagnostics.write(diagnostics);
-    
+    DevicesInfo devices_info = getDevicesInfo();
+    _devices_info.write(devices_info);
+    queryDeviceStateInfo();
 
-    RoVCommandAction command_action;
-    if(_command_action.read(command_action) == RTT::NoData)
+    DevicesCommandAction command_action;
+    if (_command_action.read(command_action) == RTT::NoData)
     {
         return;
     }
 
-    string command;
     switch (command_action)
     {
-    case CAMERA_HEAD_COMMAND:
-    {
-        TiltCameraHeadCommand camera_head_command;
-        if(_camera_head_command.read(camera_head_command) != RTT::NewData)
+        case RevolutionCommandAction:
         {
-            return;
+            RevolutionControlCommand rov2ref_setpoint;
+            if (_rov2ref_setpoint.read(rov2ref_setpoint) != RTT::NewData)
+            {
+                return;
+            }
+            // TODO - send command
+            break;
         }
-        // TODO - call lib to parser
-    }
-    case ZOOM_CAMERA_COMMAND:
-    {
-        TamronHarrierZoomCameraCommand zoom_camera_command;
-        if(_zoom_camera_command.read(zoom_camera_command) != RTT::NewData)
+        case PoweredReelCommandAction:
         {
-            return;
+            PoweredReelControlCommand reel_command;
+            if (_reel_command.read(reel_command) != RTT::NewData)
+            {
+                return;
+            }
+            // TODO - send command
         }
-        // TODO - call lib to parser
-    }
-    case GRABBER_COMMAND:
-    {
-        GrabberCommand grabber_command;
-        if(_grabber_command.read(grabber_command) != RTT::NewData)
-        {
-            return;
-        }
-        // TODO - call lib to parser
-    }
-    case LASER_LIGHT_COMMANDS:
-    {
-        LaserLightCommands laser_light_commands;
-        if(_laser_light_commands.read(laser_light_commands) != RTT::NewData)
-        {
-            return;
-        }
-        // TODO - call lib to parser
-    }
-    case ROV_SETPOINT_COMMAND:
-    {
-        RovControlCommand rov2ref_setpoint;
-        if(_rov2ref_setpoint.read(rov2ref_setpoint) != RTT::NewData)
-        {
-            return;
-        }
-        // TODO - call lib to parser
-    }
-    default:
-        break;
+        default:
+            break;
     }
 
     // TODO - convert command to rawpacket before send
@@ -129,9 +104,42 @@ void RevolutionTask::queryDeviceStateInfo()
     data_out.data = new_data;
     _data_out.write(data_out);
 }
-void RevolutionTask::cleanupHook()
+
+DevicesInfo RevolutionTask::getDevicesInfo()
 {
-    RevolutionTaskBase::cleanupHook();
+    Revolution revolution;
+    if (!mMessageParser.checkDeviceMacAddress(mDevicesMacAddress.revolution))
+    {
+        throw invalid_argument("Revolution mac address incorrect");
+    }
+    string rev_address = mDevicesMacAddress.revolution;
+    revolution.usage_time = mMessageParser.getTimeUsage(rev_address);
+    revolution.vehicle_control = mMessageParser.getVehicleStates(rev_address);
+    revolution.left_battery = mMessageParser.getBatteryInfo(rev_address, "leftBattery");
+    revolution.right_battery = mMessageParser.getBatteryInfo(rev_address, "rightBattery");
+    revolution.front_left_motor =
+        mMessageParser.getMotorInfo(rev_address, "frontLeftMotorDiagnostics");
+    revolution.front_right_motor =
+        mMessageParser.getMotorInfo(rev_address, "frontRightMotorDiagnostics");
+    revolution.rear_left_motor =
+        mMessageParser.getMotorInfo(rev_address, "rearLeftMotorDiagnostics");
+    revolution.rear_right_motor =
+        mMessageParser.getMotorInfo(rev_address, "rearRightMotorDiagnostics");
+    revolution.vertical_left_motor =
+        mMessageParser.getMotorInfo(rev_address, "verticalLeftMotorDiagnostics");
+    revolution.vertical_right_motor =
+        mMessageParser.getMotorInfo(rev_address, "verticalRightMotorDiagnostics");
+    revolution.light = mMessageParser.getLightInfo(rev_address);
+    revolution.grabber = mMessageParser.getGrabberMotorInfo(rev_address);
+    revolution.camera_head = mMessageParser.getCameraHeadInfo(rev_address);
+
+    DevicesInfo device;
+    device.revolution = revolution;
+    // TODO - reels
+
+    return device;
 }
+
 void RevolutionTask::errorHook() { RevolutionTaskBase::errorHook(); }
 void RevolutionTask::stopHook() { RevolutionTaskBase::stopHook(); }
+void RevolutionTask::cleanupHook() { RevolutionTaskBase::cleanupHook(); }
