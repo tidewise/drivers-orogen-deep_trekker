@@ -3,19 +3,23 @@
 #ifndef DEEP_TREKKER_REVOLUTIONTASK_TASK_HPP
 #define DEEP_TREKKER_REVOLUTIONTASK_TASK_HPP
 
+#include "deep_trekker/CommandAndStateMessageParser.hpp"
+#include "deep_trekker/DeepTrekkerCommands.hpp"
+#include "deep_trekker/DeepTrekkerStates.hpp"
 #include "deep_trekker/RevolutionTaskBase.hpp"
 #include "iodrivers_base/RawPacket.hpp"
-#include "deep_trekker/DeepTrekkerStates.hpp"
-#include "deep_trekker/DeepTrekkerCommands.hpp"
-#include "deep_trekker/CommandAndStateMessageParser.hpp"
 
-namespace deep_trekker{
+namespace deep_trekker
+{
 
     /*! \class RevolutionTask
-     * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
-     * Essential interfaces are operations, data flow ports and properties. These interfaces have been defined using the oroGen specification.
-     * In order to modify the interfaces you should (re)use oroGen and rely on the associated workflow.
-     * 
+     * \brief The task context provides and requires services. It uses an ExecutionEngine
+     to perform its functions.
+     * Essential interfaces are operations, data flow ports and properties. These
+     interfaces have been defined using the oroGen specification.
+     * In order to modify the interfaces you should (re)use oroGen and rely on the
+     associated workflow.
+     *
      * \details
      * The name of a TaskContext is primarily defined via:
      \verbatim
@@ -23,25 +27,25 @@ namespace deep_trekker{
          task('custom_task_name','deep_trekker::RevolutionTask')
      end
      \endverbatim
-     *  It can be dynamically adapted when the deployment is called with a prefix argument.
+     *  It can be dynamically adapted when the deployment is called with a prefix
+     argument.
      */
     class RevolutionTask : public RevolutionTaskBase
     {
-	friend class RevolutionTaskBase;
-    protected:
+        friend class RevolutionTaskBase;
 
-
-
-    public:
+      protected:
+      public:
         /** TaskContext constructor for RevolutionTask
-         * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
-         * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
+         * \param name Name of the task. This name needs to be unique to make it
+         * identifiable via nameservices. \param initial_state The initial TaskState of
+         * the TaskContext. Default is Stopped state.
          */
         RevolutionTask(std::string const& name = "deep_trekker::RevolutionTask");
 
         /** Default deconstructor of RevolutionTask
          */
-	~RevolutionTask();
+        ~RevolutionTask();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the
@@ -101,14 +105,12 @@ namespace deep_trekker{
          */
         void cleanupHook();
 
-    private:
+      private:
         CommandAndStateMessageParser mMessageParser;
         DevicesMacAddress mDevicesMacAddress;
         void queryDeviceStateInfo();
         DevicesInfo getDevicesInfo();
-
     };
-}
+} // namespace deep_trekker
 
 #endif
-

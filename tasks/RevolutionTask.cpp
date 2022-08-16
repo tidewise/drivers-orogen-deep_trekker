@@ -133,9 +133,29 @@ DevicesInfo RevolutionTask::getDevicesInfo()
     revolution.grabber = mMessageParser.getGrabberMotorInfo(rev_address);
     revolution.camera_head = mMessageParser.getCameraHeadInfo(rev_address);
 
+    ManualReel manual_reel;
+    if (!mMessageParser.checkDeviceMacAddress(mDevicesMacAddress.manual_reel))
+    {
+        throw invalid_argument("Manual reel mac address incorrect");
+    }
+    string man_reel = mDevicesMacAddress.manual_reel;
+    manual_reel.calibrated = mMessageParser.getCalibrateInfo(man_reel);
+    manual_reel.ready = mMessageParser.getReadyInfo(man_reel);
+    manual_reel.tether_distance = mMessageParser.getTetherDistanceInfo(man_reel);
+    manual_reel.leak = mMessageParser.getLeakInfo(man_reel);
+    manual_reel.cpu_temperature = mMessageParser.getTemperatureInfo(man_reel);
+
+    PoweredReel powered_reel;
+    if (!mMessageParser.checkDeviceMacAddress(mDevicesMacAddress.powered_reel))
+    {
+        throw invalid_argument("Powered reel mac address incorrect");
+    }
+    // TODO - powered reel
+
     DevicesInfo device;
     device.revolution = revolution;
-    // TODO - reels
+    device.manual_reel = manual_reel;
+    device.powered_reel = powered_reel;
 
     return device;
 }
