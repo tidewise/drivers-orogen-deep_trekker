@@ -31,6 +31,10 @@ bool RevolutionTask::startHook()
     {
         return false;
     }
+
+    // Query device info first
+    queryDeviceStateInfo();
+
     return true;
 }
 void RevolutionTask::updateHook()
@@ -115,15 +119,19 @@ void RevolutionTask::updateHook()
     RevolutionTaskBase::updateHook();
 }
 
-void RevolutionTask::errorHook()
+void RevolutionTask::queryDeviceStateInfo()
 {
-    RevolutionTaskBase::errorHook();
-}
-void RevolutionTask::stopHook()
-{
-    RevolutionTaskBase::stopHook();
+    mMessageParser = CommandAndStateMessageParser();
+    string get_message = mMessageParser.parseGetMessage();
+    vector<uint8_t> new_data(get_message.begin(), get_message.end());
+    RawPacket data_out;
+    data_out.time = Time::now();
+    data_out.data = new_data;
+    _data_out.write(data_out);
 }
 void RevolutionTask::cleanupHook()
 {
     RevolutionTaskBase::cleanupHook();
 }
+void RevolutionTask::errorHook() { RevolutionTaskBase::errorHook(); }
+void RevolutionTask::stopHook() { RevolutionTaskBase::stopHook(); }

@@ -103,6 +103,7 @@ namespace deep_trekker{
 
     private:
         DevicesMacAddress mDevicesMacAddress;
+        void queryDeviceStateInfo();
     };
 }
 
