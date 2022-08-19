@@ -150,7 +150,19 @@ DevicesInfo RevolutionTask::getDevicesInfo()
     {
         throw invalid_argument("Powered reel mac address incorrect");
     }
-    // TODO - powered reel
+    string pwr_reel = mDevicesMacAddress.powered_reel;
+    powered_reel.calibrated = mMessageParser.getCalibrateInfo(pwr_reel);
+    powered_reel.ready = mMessageParser.getReadyInfo(pwr_reel);
+    powered_reel.tether_distance = mMessageParser.getTetherDistanceInfo(pwr_reel);
+    powered_reel.leak = mMessageParser.getLeakInfo(pwr_reel);
+    powered_reel.cpu_temperature = mMessageParser.getTemperatureInfo(pwr_reel);
+    powered_reel.battery_1 = mMessageParser.getBatteryInfo(pwr_reel, "battery1");
+    powered_reel.battery_2 = mMessageParser.getBatteryInfo(pwr_reel, "battery2");
+    powered_reel.motor_1 = mMessageParser.getMotorInfo(pwr_reel, "motor1Diagnostics");
+    powered_reel.motor_2 = mMessageParser.getMotorInfo(pwr_reel, "motor2Diagnostics");
+    powered_reel.speed = mMessageParser.getSpeedInfo(pwr_reel);
+    powered_reel.ac_power_connected = mMessageParser.getACPowerInfo(pwr_reel);
+    powered_reel.estop_enabled = mMessageParser.getEStopInfo(pwr_reel);
 
     DevicesInfo device;
     device.revolution = revolution;
