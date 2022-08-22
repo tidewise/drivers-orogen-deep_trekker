@@ -11,6 +11,9 @@ import_types_from "base"
 task_context "RevolutionTask" do
     needs_configuration
 
+    # API version
+    property "api_version", "std/string"
+
     # Devices mac adress
     property "devices_mac_address", "deep_trekker/DevicesMacAddress"
 

@@ -22,6 +22,7 @@ bool RevolutionTask::configureHook()
         return false;
     }
     mDevicesMacAddress = _devices_mac_address.get();
+    mAPIVersion = _api_version.get();
 
     return true;
 }
@@ -54,9 +55,11 @@ void RevolutionTask::updateHook()
 
     _devices_info.write(getDevicesInfo());
 
+
     DevicesCommandAction command_action;
     if (_command_action.read(command_action) == RTT::NoData)
     {
+        queryDeviceStateInfo();
         return;
     }
 
@@ -72,6 +75,7 @@ void RevolutionTask::updateHook()
             }
             string address = mDevicesMacAddress.revolution;
             control_command = mMessageParser.parseTiltCameraHeadCommandMessage(
+                mAPIVersion,
                 address,
                 camera_head_command
             );
@@ -85,8 +89,11 @@ void RevolutionTask::updateHook()
                 return;
             }
             string address = mDevicesMacAddress.revolution;
-            control_command =
-                mMessageParser.parseGrabberCommandMessage(address, grabber_command);
+            control_command = mMessageParser.parseGrabberCommandMessage(
+                mAPIVersion,
+                address,
+                grabber_command
+            );
             break;
         }
         case RevolutionCommandAction:
@@ -97,8 +104,11 @@ void RevolutionTask::updateHook()
                 return;
             }
             string address = mDevicesMacAddress.revolution;
-            control_command =
-                mMessageParser.parseRevolutionCommandMessage(address, rov2ref_command);
+            control_command = mMessageParser.parseRevolutionCommandMessage(
+                mAPIVersion,
+                address,
+                rov2ref_command
+            );
             break;
         }
         case PoweredReelCommandAction:
@@ -109,8 +119,11 @@ void RevolutionTask::updateHook()
                 return;
             }
             string address = mDevicesMacAddress.powered_reel;
-            control_command =
-                mMessageParser.parsePoweredReelCommandMessage(address, reel_command);
+            control_command = mMessageParser.parsePoweredReelCommandMessage(
+                mAPIVersion,
+                address,
+                reel_command
+            );
         }
         default:
             return;
@@ -123,7 +136,6 @@ void RevolutionTask::updateHook()
     data_out.data = new_data;
     _data_out.write(data_out);
 
-    queryDeviceStateInfo();
 
     RevolutionTaskBase::updateHook();
 }
@@ -131,7 +143,7 @@ void RevolutionTask::updateHook()
 void RevolutionTask::queryDeviceStateInfo()
 {
     mMessageParser = CommandAndStateMessageParser();
-    string get_message = mMessageParser.parseGetMessage();
+    string get_message = mMessageParser.parseGetMessage(mAPIVersion);
     vector<uint8_t> new_data(get_message.begin(), get_message.end());
     RawPacket data_out;
     data_out.time = Time::now();

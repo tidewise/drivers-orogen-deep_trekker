@@ -106,6 +106,7 @@ namespace deep_trekker
         void cleanupHook();
 
       private:
+        std::string mAPIVersion;
         CommandAndStateMessageParser mMessageParser;
         DevicesMacAddress mDevicesMacAddress;
         void queryDeviceStateInfo();
