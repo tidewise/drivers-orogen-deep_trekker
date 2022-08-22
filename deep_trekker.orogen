@@ -17,8 +17,14 @@ task_context "RevolutionTask" do
     # Devices command action
     input_port "command_action", "deep_trekker/DevicesCommandAction"
 
+    # Tilt Camera head command
+    input_port "camera_head_command", "deep_trekker/TiltCameraHeadCommand"
+
+    # Grabber command
+    input_port "grabber_command", "deep_trekker/GrabberCommand"
+
     # Vehicle setpoint in local frame
-    input_port "rov2ref_setpoint", "deep_trekker/RevolutionControlCommand"
+    input_port "rov2ref_command", "deep_trekker/RevolutionControlCommand"
 
     # Powered reel command
     input_port "reel_command", "deep_trekker/PoweredReelControlCommand"
