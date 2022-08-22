@@ -52,9 +52,7 @@ void RevolutionTask::updateHook()
         throw invalid_argument(error);
     }
 
-    DevicesInfo devices_info = getDevicesInfo();
-    _devices_info.write(devices_info);
-    queryDeviceStateInfo();
+    _devices_info.write(getDevicesInfo());
 
     DevicesCommandAction command_action;
     if (_command_action.read(command_action) == RTT::NoData)
@@ -62,16 +60,45 @@ void RevolutionTask::updateHook()
         return;
     }
 
+    string control_command;
     switch (command_action)
     {
-        case RevolutionCommandAction:
+        case TiltCameraHeadCommandAction:
         {
-            RevolutionControlCommand rov2ref_setpoint;
-            if (_rov2ref_setpoint.read(rov2ref_setpoint) != RTT::NewData)
+            TiltCameraHeadCommand camera_head_command;
+            if (_camera_head_command.read(camera_head_command) != RTT::NewData)
             {
                 return;
             }
-            // TODO - send command
+            string address = mDevicesMacAddress.revolution;
+            control_command = mMessageParser.parseTiltCameraHeadCommandMessage(
+                address,
+                camera_head_command
+            );
+            break;
+        }
+        case GrabberCommandAction:
+        {
+            GrabberCommand grabber_command;
+            if (_grabber_command.read(grabber_command) != RTT::NewData)
+            {
+                return;
+            }
+            string address = mDevicesMacAddress.revolution;
+            control_command =
+                mMessageParser.parseGrabberCommandMessage(address, grabber_command);
+            break;
+        }
+        case RevolutionCommandAction:
+        {
+            RevolutionControlCommand rov2ref_command;
+            if (_rov2ref_command.read(rov2ref_command) != RTT::NewData)
+            {
+                return;
+            }
+            string address = mDevicesMacAddress.revolution;
+            control_command =
+                mMessageParser.parseRevolutionCommandMessage(address, rov2ref_command);
             break;
         }
         case PoweredReelCommandAction:
@@ -81,15 +108,22 @@ void RevolutionTask::updateHook()
             {
                 return;
             }
-            // TODO - send command
+            string address = mDevicesMacAddress.powered_reel;
+            control_command =
+                mMessageParser.parsePoweredReelCommandMessage(address, reel_command);
         }
         default:
-            break;
+            return;
     }
 
-    // TODO - convert command to rawpacket before send
+    vector<uint8_t> new_data(control_command.begin(), control_command.end());
     RawPacket data_out;
+    data_out.time = Time::now();
+    data_out.data.resize(new_data.size());
+    data_out.data = new_data;
     _data_out.write(data_out);
+
+    queryDeviceStateInfo();
 
     RevolutionTaskBase::updateHook();
 }
