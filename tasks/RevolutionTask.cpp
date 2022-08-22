@@ -101,6 +101,7 @@ void RevolutionTask::queryDeviceStateInfo()
     vector<uint8_t> new_data(get_message.begin(), get_message.end());
     RawPacket data_out;
     data_out.time = Time::now();
+    data_out.data.resize(new_data.size());
     data_out.data = new_data;
     _data_out.write(data_out);
 }
