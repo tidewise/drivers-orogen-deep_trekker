@@ -10,4 +10,6 @@
   <depend package="base/types" />
   <depend package="drivers/orogen/iodrivers_base"/>
   <depend package="drivers/deep_trekker" />
+
+  <test_depend package="tools/syskit" />
 </package>
