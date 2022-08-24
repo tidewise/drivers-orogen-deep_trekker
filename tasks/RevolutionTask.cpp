@@ -126,7 +126,7 @@ void RevolutionTask::updateHook()
             );
         }
         default:
-            return;
+            break;
     }
 
     vector<uint8_t> new_data(control_command.begin(), control_command.end());
