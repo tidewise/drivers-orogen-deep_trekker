@@ -299,7 +299,7 @@ describe OroGen.deep_trekker.RevolutionTask do
         cmd_action = Types.deep_trekker.DevicesCommandAction
         cmd_action = "RevolutionCommandAction"
         # revolution cmd input
-        cmd = Types.deep_trekker.RevolutionControlCommand.new
+        cmd = Types.deep_trekker.PositionAndLightCommand.new
         cmd.light = 60
         cmd.vehicle_setpoint.position = Eigen::Vector3.new(1, 3, 4)
         cmd.vehicle_setpoint.yaw.rad = 0.2

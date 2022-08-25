@@ -26,8 +26,8 @@ task_context "RevolutionTask" do
     # Grabber command
     input_port "grabber_command", "deep_trekker/GrabberCommand"
 
-    # Vehicle setpoint in local frame
-    input_port "rov2ref_command", "deep_trekker/RevolutionControlCommand"
+    # Vehicle setpoint in local frame and light command
+    input_port "rov2ref_command", "deep_trekker/PositionAndLightCommand"
 
     # Powered reel command
     input_port "reel_command", "deep_trekker/PoweredReelControlCommand"

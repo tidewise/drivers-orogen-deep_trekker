@@ -78,7 +78,7 @@ void RevolutionTask::updateHook()
             break;
         }
         case RevolutionCommandAction: {
-            RevolutionControlCommand rov2ref_command;
+            PositionAndLightCommand rov2ref_command;
             if (_rov2ref_command.read(rov2ref_command) != RTT::NewData) {
                 return;
             }
