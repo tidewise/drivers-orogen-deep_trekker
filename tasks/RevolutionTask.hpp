@@ -109,7 +109,8 @@ namespace deep_trekker
         std::string mAPIVersion;
         CommandAndStateMessageParser mMessageParser;
         DevicesMacAddress mDevicesMacAddress;
-        void queryDeviceStateInfo();
+        void queryNewDeviceStateInfo();
+        void receiveDeviceStateInfo();
         DevicesInfo getDevicesInfo();
     };
 } // namespace deep_trekker

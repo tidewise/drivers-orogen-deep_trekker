@@ -34,32 +34,19 @@ bool RevolutionTask::startHook()
     }
 
     // Query device info first
-    queryDeviceStateInfo();
+    queryNewDeviceStateInfo();
 
     return true;
 }
 void RevolutionTask::updateHook()
 {
-    RawPacket data_in;
-    if (_data_in.read(data_in) == RTT::NoData)
-    {
-        return;
-    }
-
-    string error;
-    string data_str(data_in.data.begin(), data_in.data.end());
-    if (!mMessageParser.parseJSONMessage(data_str.c_str(), error))
-    {
-        throw invalid_argument(error);
-    }
-
-    _devices_info.write(getDevicesInfo());
-
+    // For new device state info,
+    // query it by the command action
+    receiveDeviceStateInfo();
 
     DevicesCommandAction command_action;
     if (_command_action.read(command_action) == RTT::NoData)
     {
-        queryDeviceStateInfo();
         return;
     }
 
@@ -124,6 +111,12 @@ void RevolutionTask::updateHook()
                 address,
                 reel_command
             );
+            break;
+        }
+        case QueryDeviceStateInfo:
+        {
+            queryNewDeviceStateInfo();
+            return;
         }
         default:
             break;
@@ -136,11 +129,10 @@ void RevolutionTask::updateHook()
     data_out.data = new_data;
     _data_out.write(data_out);
 
-
     RevolutionTaskBase::updateHook();
 }
 
-void RevolutionTask::queryDeviceStateInfo()
+void RevolutionTask::queryNewDeviceStateInfo()
 {
     mMessageParser = CommandAndStateMessageParser();
     string get_message = mMessageParser.parseGetMessage(mAPIVersion);
@@ -150,6 +142,23 @@ void RevolutionTask::queryDeviceStateInfo()
     data_out.data.resize(new_data.size());
     data_out.data = new_data;
     _data_out.write(data_out);
+}
+
+void RevolutionTask::receiveDeviceStateInfo()
+{
+    RawPacket data_in;
+    if (_data_in.read(data_in) == RTT::NoData)
+    {
+        return;
+    }
+
+    string error;
+    string data_str(data_in.data.begin(), data_in.data.end());
+    if (!mMessageParser.parseJSONMessage(data_str.c_str(), error))
+    {
+        throw invalid_argument(error);
+    }
+    _devices_info.write(getDevicesInfo());
 }
 
 DevicesInfo RevolutionTask::getDevicesInfo()
