@@ -109,9 +109,16 @@ namespace deep_trekker
         std::string mAPIVersion;
         CommandAndStateMessageParser mMessageParser;
         DevicesMacAddress mDevicesMacAddress;
+        void evaluateCameraHeadCommand();
+        void evaluateGrabberCommand();
+        void evaluatePositionAndLightCommand();
+        void evaluatePoweredReelControlCommand();
+        void sendRawDataOutput(std::string control_command);
         void queryNewDeviceStateInfo();
         void receiveDeviceStateInfo();
-        DevicesInfo getDevicesInfo();
+        Revolution getRevolutionStates();
+        ManualReel getManualReelStates();
+        PoweredReel getPoweredReelStates();
     };
 } // namespace deep_trekker
 

@@ -43,78 +43,82 @@ bool RevolutionTask::startHook()
 }
 void RevolutionTask::updateHook()
 {
-    // For new device state info,
-    // query it by the command action
+    queryNewDeviceStateInfo();
+
     receiveDeviceStateInfo();
 
-    DevicesCommandAction command_action;
-    if (_command_action.read(command_action) == RTT::NoData) {
+    evaluateCameraHeadCommand();
+
+    evaluateGrabberCommand();
+
+    evaluatePositionAndLightCommand();
+
+    evaluatePoweredReelControlCommand();
+
+    RevolutionTaskBase::updateHook();
+}
+
+void RevolutionTask::evaluateCameraHeadCommand()
+{
+    TiltCameraHeadCommand camera_head_command;
+    if (_camera_head_command.read(camera_head_command) != RTT::NewData) {
         return;
     }
+    string address = mDevicesMacAddress.revolution;
+    string control_command =
+        mMessageParser.parseTiltCameraHeadCommandMessage(mAPIVersion,
+            address,
+            camera_head_command);
+    sendRawDataOutput(control_command);
+}
 
-    string control_command;
-    switch (command_action) {
-        case TiltCameraHeadCommandAction: {
-            TiltCameraHeadCommand camera_head_command;
-            if (_camera_head_command.read(camera_head_command) != RTT::NewData) {
-                return;
-            }
-            string address = mDevicesMacAddress.revolution;
-            control_command =
-                mMessageParser.parseTiltCameraHeadCommandMessage(mAPIVersion,
-                    address,
-                    camera_head_command);
-            break;
-        }
-        case GrabberCommandAction: {
-            GrabberCommand grabber_command;
-            if (_grabber_command.read(grabber_command) != RTT::NewData) {
-                return;
-            }
-            string address = mDevicesMacAddress.revolution;
-            control_command = mMessageParser.parseGrabberCommandMessage(mAPIVersion,
-                address,
-                grabber_command);
-            break;
-        }
-        case RevolutionCommandAction: {
-            PositionAndLightCommand rov2ref_command;
-            if (_rov2ref_command.read(rov2ref_command) != RTT::NewData) {
-                return;
-            }
-            string address = mDevicesMacAddress.revolution;
-            control_command = mMessageParser.parseRevolutionCommandMessage(mAPIVersion,
-                address,
-                rov2ref_command);
-            break;
-        }
-        case PoweredReelCommandAction: {
-            PoweredReelControlCommand reel_command;
-            if (_reel_command.read(reel_command) != RTT::NewData) {
-                return;
-            }
-            string address = mDevicesMacAddress.powered_reel;
-            control_command = mMessageParser.parsePoweredReelCommandMessage(mAPIVersion,
-                address,
-                reel_command);
-            break;
-        }
-        case QueryDeviceStateInfo: {
-            queryNewDeviceStateInfo();
-            return;
-        }
-        default:
-            break;
+void RevolutionTask::evaluateGrabberCommand()
+{
+    GrabberCommand grabber_command;
+    if (_grabber_command.read(grabber_command) != RTT::NewData) {
+        return;
     }
+    string address = mDevicesMacAddress.revolution;
+    string control_command = mMessageParser.parseGrabberCommandMessage(mAPIVersion,
+        address,
+        grabber_command);
+    sendRawDataOutput(control_command);
+}
 
+void RevolutionTask::evaluatePositionAndLightCommand()
+{
+    PositionAndLightCommand rov2ref_command;
+    if (_rov2ref_command.read(rov2ref_command) != RTT::NewData) {
+        return;
+    }
+    string address = mDevicesMacAddress.revolution;
+    string control_command = mMessageParser.parseRevolutionCommandMessage(mAPIVersion,
+        address,
+        rov2ref_command);
+    sendRawDataOutput(control_command);
+}
+
+void RevolutionTask::evaluatePoweredReelControlCommand()
+{
+    PoweredReelControlCommand reel_command;
+    if (_reel_command.read(reel_command) != RTT::NewData) {
+        return;
+    }
+    string address = mDevicesMacAddress.powered_reel;
+    string control_command = mMessageParser.parsePoweredReelCommandMessage(mAPIVersion,
+        address,
+        reel_command);
+    sendRawDataOutput(control_command);
+}
+
+void RevolutionTask::sendRawDataOutput(string control_command)
+{
     vector<uint8_t> new_data(control_command.begin(), control_command.end());
     RawPacket data_out;
     data_out.time = Time::now();
     data_out.data.resize(new_data.size());
     data_out.data = new_data;
     _data_out.write(data_out);
-
-    RevolutionTaskBase::updateHook();
 }
 
 void RevolutionTask::queryNewDeviceStateInfo()
@@ -132,7 +136,7 @@ void RevolutionTask::queryNewDeviceStateInfo()
 void RevolutionTask::receiveDeviceStateInfo()
 {
     RawPacket data_in;
-    if (_data_in.read(data_in) == RTT::NoData) {
+    if (_data_in.read(data_in) != RTT::NewData) {
         return;
     }
 
@@ -141,10 +145,23 @@ void RevolutionTask::receiveDeviceStateInfo()
     if (!mMessageParser.parseJSONMessage(data_str.c_str(), error)) {
         throw invalid_argument(error);
     }
-    _devices_info.write(getDevicesInfo());
+    if(!mDevicesMacAddress.revolution.empty())
+    {
+        _revolution_states.write(getRevolutionStates());
+    }
+
+    if(!mDevicesMacAddress.manual_reel.empty())
+    {
+        _manual_reel_states.write(getManualReelStates());
+    }
+
+    if(!mDevicesMacAddress.powered_reel.empty())
+    {
+        _powered_reel_states.write(getPoweredReelStates());
+    }
 }
 
-DevicesInfo RevolutionTask::getDevicesInfo()
+Revolution RevolutionTask::getRevolutionStates()
 {
     Revolution revolution;
     if (!mMessageParser.checkDeviceMacAddress(mDevicesMacAddress.revolution)) {
@@ -171,6 +188,11 @@ DevicesInfo RevolutionTask::getDevicesInfo()
     revolution.grabber = mMessageParser.getGrabberMotorInfo(rev_address);
     revolution.camera_head = mMessageParser.getCameraHeadInfo(rev_address);
 
+    return revolution;
+}
+
+ManualReel RevolutionTask::getManualReelStates()
+{
     ManualReel manual_reel;
     if (!mMessageParser.checkDeviceMacAddress(mDevicesMacAddress.manual_reel)) {
         throw invalid_argument("Manual reel mac address incorrect");
@@ -182,6 +204,11 @@ DevicesInfo RevolutionTask::getDevicesInfo()
     manual_reel.leak = mMessageParser.getLeakInfo(man_reel);
     manual_reel.cpu_temperature = mMessageParser.getTemperatureInfo(man_reel);
 
+    return manual_reel;
+}
+
+PoweredReel RevolutionTask::getPoweredReelStates()
+{
     PoweredReel powered_reel;
     if (!mMessageParser.checkDeviceMacAddress(mDevicesMacAddress.powered_reel)) {
         throw invalid_argument("Powered reel mac address incorrect");
@@ -200,12 +227,7 @@ DevicesInfo RevolutionTask::getDevicesInfo()
     powered_reel.ac_power_connected = mMessageParser.getACPowerInfo(pwr_reel);
     powered_reel.estop_enabled = mMessageParser.getEStopInfo(pwr_reel);
 
-    DevicesInfo device;
-    device.revolution = revolution;
-    device.manual_reel = manual_reel;
-    device.powered_reel = powered_reel;
-
-    return device;
+    return powered_reel;
 }
 
 void RevolutionTask::errorHook()

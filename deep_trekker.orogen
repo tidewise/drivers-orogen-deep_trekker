@@ -17,9 +17,6 @@ task_context "RevolutionTask" do
     # Devices mac adress
     property "devices_mac_address", "deep_trekker/DevicesMacAddress"
 
-    # Devices command action
-    input_port "command_action", "deep_trekker/DevicesCommandAction"
-
     # Tilt Camera head command
     input_port "camera_head_command", "deep_trekker/TiltCameraHeadCommand"
 
@@ -38,8 +35,14 @@ task_context "RevolutionTask" do
     # Rawdata out
     output_port "data_out", "iodrivers_base/RawPacket"
 
-    # Deep Trekker Devices diagnostics
-    output_port "devices_info", "deep_trekker/DevicesInfo"
+    # Revolution states
+    output_port "revolution_states", "deep_trekker/Revolution"
+
+    # Manual Reel states
+    output_port "manual_reel_states", "deep_trekker/ManualReel"
+
+    # Powered Reel states
+    output_port "powered_reel_states", "deep_trekker/PoweredReel"
 
     port_driven
 end
