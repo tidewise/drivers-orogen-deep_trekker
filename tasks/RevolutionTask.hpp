@@ -119,6 +119,10 @@ namespace deep_trekker
         Revolution getRevolutionStates();
         ManualReel getManualReelStates();
         PoweredReel getPoweredReelStates();
+        RevolutionBodyStates getRevolutionBodyStates();
+        RevolutionMotorStates getRevolutionMotorStates();
+        PoweredReelMotorStates getPoweredReelMotorStates();
+        GrabberMotorStates getGrabberMotorStates();
     };
 } // namespace deep_trekker
 
