@@ -17,13 +17,13 @@ task_context "RevolutionTask" do
     # Devices mac adress
     property "devices_mac_address", "deep_trekker/DevicesMacAddress"
 
-    # Tilt camera head joint command
+    # Tilt camera head position/speed joint command
     input_port "tilt_camera_head_command", "base/samples/Joints"
 
     # Camera head laser, light and camera commands
     input_port "camera_head_command", "deep_trekker/CameraHeadCommand"
 
-    # Grabber motor power joint commands
+    # Grabber raw joint commands
     input_port "grabber_command", "base/samples/Joints"
 
     # Vehicle setpoint in local frame and light command
