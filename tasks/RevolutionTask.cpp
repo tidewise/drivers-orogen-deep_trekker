@@ -60,7 +60,7 @@ void RevolutionTask::updateHook()
 
 void RevolutionTask::evaluateCameraHeadCommand()
 {
-    TiltCameraHeadCommand tilt_camera_head_command;
+    samples::Joints tilt_camera_head_command;
     if (_tilt_camera_head_command.read(tilt_camera_head_command) == RTT::NoData) {
         return;
     }
@@ -80,7 +80,7 @@ void RevolutionTask::evaluateCameraHeadCommand()
 
 void RevolutionTask::evaluateGrabberCommand()
 {
-    GrabberCommand grabber_command;
+    samples::Joints grabber_command;
     if (_grabber_command.read(grabber_command) != RTT::NewData) {
         return;
     }
@@ -93,7 +93,7 @@ void RevolutionTask::evaluateGrabberCommand()
 
 void RevolutionTask::evaluatePositionAndLightCommand()
 {
-    base::commands::LinearAngular6DCommand rov2ref_command;
+    commands::LinearAngular6DCommand rov2ref_command;
     if (_rov2ref_command.read(rov2ref_command) != RTT::NewData) {
         return;
     }
@@ -115,7 +115,7 @@ void RevolutionTask::evaluatePositionAndLightCommand()
 
 void RevolutionTask::evaluatePoweredReelControlCommand()
 {
-    PoweredReelControlCommand powered_reel_command;
+    samples::Joints powered_reel_command;
     if (_powered_reel_command.read(powered_reel_command) != RTT::NewData) {
         return;
     }
@@ -135,22 +135,13 @@ void RevolutionTask::sendRawDataOutput(string control_command)
     data_out.data.resize(new_data.size());
     data_out.data = new_data;
     _data_out.write(data_out);
-    // debug output
-    _data_command_out.write(data_out);
 }
 
 void RevolutionTask::queryNewDeviceStateInfo()
 {
     mMessageParser = CommandAndStateMessageParser();
     string get_message = mMessageParser.parseGetMessage(mAPIVersion);
-    vector<uint8_t> new_data(get_message.begin(), get_message.end());
-    RawPacket data_out;
-    data_out.time = Time::now();
-    data_out.data.resize(new_data.size());
-    data_out.data = new_data;
-    _data_out.write(data_out);
-    // debug output
-    _data_query_out.write(data_out);
+    sendRawDataOutput(get_message);
 }
 
 void RevolutionTask::receiveDeviceStateInfo()
@@ -201,7 +192,7 @@ Revolution RevolutionTask::getRevolutionStates()
     return revolution;
 }
 
-RevolutionBodyStates RevolutionTask::getRevolutionBodyStates()
+samples::RigidBodyState RevolutionTask::getRevolutionBodyStates()
 {
     if (!mMessageParser.checkDeviceMacAddress(mDevicesMacAddress.revolution)) {
         throw invalid_argument("Revolution mac address incorrect");
@@ -211,7 +202,7 @@ RevolutionBodyStates RevolutionTask::getRevolutionBodyStates()
     return mMessageParser.getRevolutionBodyStates(rev_address);
 }
 
-RevolutionMotorStates RevolutionTask::getRevolutionMotorStates()
+samples::Joints RevolutionTask::getRevolutionMotorStates()
 {
     if (!mMessageParser.checkDeviceMacAddress(mDevicesMacAddress.revolution)) {
         throw invalid_argument("Revolution mac address incorrect");
@@ -241,7 +232,7 @@ PoweredReel RevolutionTask::getPoweredReelStates()
     return powered_reel;
 }
 
-PoweredReelMotorStates RevolutionTask::getPoweredReelMotorStates()
+samples::Joints RevolutionTask::getPoweredReelMotorStates()
 {
     if (!mMessageParser.checkDeviceMacAddress(mDevicesMacAddress.powered_reel)) {
         throw invalid_argument("Powered reel mac address incorrect");
@@ -251,7 +242,7 @@ PoweredReelMotorStates RevolutionTask::getPoweredReelMotorStates()
     return mMessageParser.getPoweredReelMotorState(pwr_reel);
 }
 
-GrabberMotorStates RevolutionTask::getGrabberMotorStates()
+samples::Joints RevolutionTask::getGrabberMotorStates()
 {
     if (!mMessageParser.checkDeviceMacAddress(mDevicesMacAddress.revolution)) {
         throw invalid_argument("Revolution mac address incorrect");

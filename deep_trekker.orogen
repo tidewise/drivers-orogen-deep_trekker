@@ -41,12 +41,6 @@ task_context "RevolutionTask" do
     # Rawdata out
     output_port "data_out", "iodrivers_base/RawPacket"
 
-    # Rawdata vehicle command out (debug purpose)
-    output_port "data_command_out", "iodrivers_base/RawPacket"
-
-    # Rawdata query device info out (debug purpose)
-    output_port "data_query_out", "iodrivers_base/RawPacket"
-
     # Revolution states
     output_port "revolution_states", "deep_trekker/Revolution"
 

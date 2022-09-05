@@ -194,7 +194,10 @@ describe OroGen.deep_trekker.RevolutionTask do
             syskit_write task.rov2ref_command_port, cmd
             syskit_write task.data_in_port, raw_cmd
         end.to do
-            have_one_new_sample task.data_command_out_port
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                json["method"] == "SET"
+            end
         end
 
         json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
@@ -250,7 +253,10 @@ describe OroGen.deep_trekker.RevolutionTask do
             syskit_write task.camera_head_command_port, cmd_head
             syskit_write task.tilt_camera_head_command_port, cmd_tilt
         end.to do
-            have_one_new_sample task.data_command_out_port
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                json["method"] == "SET"
+            end
         end
 
         json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
@@ -311,7 +317,10 @@ describe OroGen.deep_trekker.RevolutionTask do
             syskit_write task.data_in_port, raw_cmd
             syskit_write task.grabber_command_port, cmd
         end.to do
-            have_one_new_sample task.data_command_out_port
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                json["method"] == "SET"
+            end
         end
 
         json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
@@ -339,7 +348,10 @@ describe OroGen.deep_trekker.RevolutionTask do
             syskit_write task.data_in_port, raw_cmd
             syskit_write task.powered_reel_command_port, cmd
         end.to do
-            have_one_new_sample task.data_command_out_port
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                json["method"] == "SET"
+            end
         end
 
         json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
@@ -361,7 +373,10 @@ describe OroGen.deep_trekker.RevolutionTask do
         sample = expect_execution do
             syskit_write task.data_in_port, raw_cmd
         end.to do
-            have_one_new_sample task.data_query_out_port
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                json["method"] == "GET"
+            end
         end
 
         json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
