@@ -93,14 +93,23 @@ void RevolutionTask::evaluateGrabberCommand()
 
 void RevolutionTask::evaluatePositionAndLightCommand()
 {
-    PositionAndLightCommand rov2ref_command;
+    base::commands::LinearAngular6DCommand rov2ref_command;
     if (_rov2ref_command.read(rov2ref_command) != RTT::NewData) {
         return;
     }
+
+    double light_command;
+    if (_light_command.read(light_command) == RTT::NoData) {
+        return;
+    }
+    PositionAndLightCommand command;
+    command.light = light_command;
+    command.vehicle_setpoint = rov2ref_command;
+
     string address = mDevicesMacAddress.revolution;
     string control_command = mMessageParser.parseRevolutionCommandMessage(mAPIVersion,
         address,
-        rov2ref_command);
+        command);
     sendRawDataOutput(control_command);
 }
 

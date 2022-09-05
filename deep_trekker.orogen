@@ -26,8 +26,11 @@ task_context "RevolutionTask" do
     # Grabber raw joint commands
     input_port "grabber_command", "base/samples/Joints"
 
-    # Vehicle setpoint in local frame and light command
-    input_port "rov2ref_command", "deep_trekker/PositionAndLightCommand"
+    # Vehicle setpoint in local frame
+    input_port "rov2ref_command", "base/commands/LinearAngular6DCommand"
+
+    # Vehicle light command
+    input_port "light_command", "double"
 
     # Powered reel speed joint command
     input_port "powered_reel_command", "base/samples/Joints"

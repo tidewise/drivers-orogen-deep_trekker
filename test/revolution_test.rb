@@ -184,13 +184,13 @@ describe OroGen.deep_trekker.RevolutionTask do
     it "sends revolution command" do
         raw_cmd = raw_packet_input
         # revolution cmd input
-        cmd = Types.deep_trekker.PositionAndLightCommand.new
+        cmd = Types.base.LinearAngular6DCommand.new
         cmd.zero!
-        cmd.light = 0.2
-        cmd.vehicle_setpoint.linear = Eigen::Vector3.new(1, 3, 4)
-        cmd.vehicle_setpoint.angular = Eigen::Vector3.new(0, 0, 0.2)
+        cmd.linear = Eigen::Vector3.new(1, 3, 4)
+        cmd.angular = Eigen::Vector3.new(0, 0, 0.2)
 
         sample = expect_execution do
+            syskit_write task.light_command_port, 0.2
             syskit_write task.rov2ref_command_port, cmd
             syskit_write task.data_in_port, raw_cmd
         end.to do
