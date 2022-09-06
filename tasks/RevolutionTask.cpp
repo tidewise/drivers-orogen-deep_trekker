@@ -107,9 +107,8 @@ void RevolutionTask::evaluatePositionAndLightCommand()
     command.vehicle_setpoint = rov2ref_command;
 
     string address = mDevicesMacAddress.revolution;
-    string control_command = mMessageParser.parseRevolutionCommandMessage(mAPIVersion,
-        address,
-        command);
+    string control_command =
+        mMessageParser.parseRevolutionCommandMessage(mAPIVersion, address, command);
     sendRawDataOutput(control_command);
 }
 
@@ -181,6 +180,24 @@ Revolution RevolutionTask::getRevolutionStates()
     }
     string rev_address = mDevicesMacAddress.revolution;
     revolution.usage_time = mMessageParser.getTimeUsage(rev_address);
+    revolution.front_right_motor_overcurrent =
+        mMessageParser.getMotorOvercurrentStates(rev_address,
+            "frontRightMotorDiagnostics");
+    revolution.front_left_motor_overcurrent =
+        mMessageParser.getMotorOvercurrentStates(rev_address,
+            "frontLeftMotorDiagnostics");
+    revolution.rear_right_motor_overcurrent =
+        mMessageParser.getMotorOvercurrentStates(rev_address,
+            "rearRightMotorDiagnostics");
+    revolution.rear_left_motor_overcurrent =
+        mMessageParser.getMotorOvercurrentStates(rev_address,
+            "rearLeftMotorDiagnostics");
+    revolution.vertical_right_motor_overcurrent =
+        mMessageParser.getMotorOvercurrentStates(rev_address,
+            "verticalRightMotorDiagnostics");
+    revolution.vertical_left_motor_overcurrent =
+        mMessageParser.getMotorOvercurrentStates(rev_address,
+            "verticalLeftMotorDiagnostics");
     revolution.vehicle_control = mMessageParser.getRevolutionControlStates(rev_address);
     revolution.left_battery = mMessageParser.getBatteryStates(rev_address, "leftBattery");
     revolution.right_battery =
@@ -228,6 +245,10 @@ PoweredReel RevolutionTask::getPoweredReelStates()
     powered_reel.battery_2 = mMessageParser.getBatteryStates(pwr_reel, "battery2");
     powered_reel.ac_power_connected = mMessageParser.isACPowerConnected(pwr_reel);
     powered_reel.estop_enabled = mMessageParser.isEStopEnabled(pwr_reel);
+    powered_reel.motor_1_overcurrent =
+        mMessageParser.getMotorOvercurrentStates(pwr_reel, "motor1Diagnostics");
+    powered_reel.motor_2_overcurrent =
+        mMessageParser.getMotorOvercurrentStates(pwr_reel, "motor2Diagnostics");
 
     return powered_reel;
 }
