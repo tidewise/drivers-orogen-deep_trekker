@@ -35,141 +35,152 @@ describe OroGen.deep_trekker.RevolutionTask do
     def raw_packet_input
         cmd = JSON.dump(
             {
-                devices: {
-                    "57B974C0A269": {
-                        "currentSeconds": 2,
-                        "control": {
-                            "setpoint": {
-                                "pose": {
-                                    "localFrame": {
-                                        "x": 1,
-                                        "y": 2,
-                                        "z": -2,
-                                        "yaw": 0.2
+                payload: {
+                    devices: {
+                        "57B974C0A269": {
+                            "currentSeconds": 2,
+                            "control": {
+                                "setpoint": {
+                                    "pose": {
+                                        "localFrame": {
+                                            "x": 1,
+                                            "y": 2,
+                                            "z": -2,
+                                            "yaw": 0.2
+                                        }
                                     }
-                                }
-                            },
-                            "current": {
-                                "pose": {
-                                    "localFrame": {
-                                        "x": 1,
-                                        "y": 2,
-                                        "z": -2,
-                                        "yaw": 0.2
-                                    }
-                                }
-                            }
-                        },
-                        "leftBattery": {
-                            "percent": 0.8,
-                            "voltage": 1,
-                            "charging": 2
-                        },
-                        "rightBattery": {
-                            "percent": 0.8,
-                            "voltage": 1,
-                            "charging": 2
-                        },
-                        "frontLeftMotorDiagnostics": {
-                            "current": 3,
-                            "overcurret": false,
-                            "rpm": 5.5
-                        },
-                        "frontRightMotorDiagnostics": {
-                            "current": 3,
-                            "overcurret": false,
-                            "rpm": 5.5
-                        },
-                        "rearLeftMotorDiagnostics": {
-                            "current": 3,
-                            "overcurret": false,
-                            "rpm": 5.5
-                        },
-                        "rearRightMotorDiagnostics": {
-                            "current": 3,
-                            "overcurret": false,
-                            "rpm": 5.5
-                        },
-                        "verticalLeftMotorDiagnostics": {
-                            "current": 3,
-                            "overcurret": false,
-                            "rpm": 5.5
-                        },
-                        "verticalRightMotorDiagnostics": {
-                            "current": 3,
-                            "overcurret": false,
-                            "rpm": 5.5
-                        },
-                        "auxLights": 1,
-                        "grabber": {
-                            "motorDiagnostics": {
-                                "current": 3,
-                                "overcurret": false,
-                                "rpm": 5.5
-                            },
-                            "openClose": 1,
-                            "rotate": 1.0
-                        },
-                        "cameraHead": {
-                            "lights": 1.5,
-                            "lasers": true,
-                            "tilt": {
-                                "speed": 1.5
-                            },
-                            "tiltMotorDiagnostics": {
-                                "current": 3,
-                                "overcurret": false,
-                                "rpm": 5.5
-                            },
-                            "camera": {
-                                "focus": {
-                                    "value": 1.5
                                 },
-                                "saturation": 2,
-                                "sharpness": 2,
-                                "zoom": {
-                                    "ration": 1.5,
-                                    "speed": 1.5
+                                "current": {
+                                    "pose": {
+                                        "localFrame": {
+                                            "x": 1,
+                                            "y": 2,
+                                            "z": -2,
+                                            "yaw": 0.2
+                                        }
+                                    }
+                                }
+                            },
+                            "leftBattery": {
+                                "percent": 80,
+                                "voltage": 50,
+                                "charging": 20
+                            },
+                            "rightBattery": {
+                                "percent": 80,
+                                "voltage": 60,
+                                "charging": 20
+                            },
+                            "frontLeftMotorDiagnostics": {
+                                "current": 3,
+                                "overcurrent": false,
+                                "rpm": 5.5
+                            },
+                            "frontRightMotorDiagnostics": {
+                                "current": 3,
+                                "overcurrent": false,
+                                "rpm": 5.5
+                            },
+                            "rearLeftMotorDiagnostics": {
+                                "current": 3,
+                                "overcurrent": true,
+                                "rpm": 5.5
+                            },
+                            "rearRightMotorDiagnostics": {
+                                "current": 3,
+                                "overcurrent": false,
+                                "rpm": 5.5
+                            },
+                            "verticalLeftMotorDiagnostics": {
+                                "current": 3,
+                                "overcurrent": true,
+                                "rpm": 5.5
+                            },
+                            "verticalRightMotorDiagnostics": {
+                                "current": 3,
+                                "overcurrent": true,
+                                "rpm": 5.5
+                            },
+                            "auxLights": 20,
+                            "grabber": {
+                                "openCloseMotorDiagnostics": {
+                                    "current": 8,
+                                    "overcurrent": true,
+                                    "rpm": 5.5
+                                },
+                                "rollMotorDiagnostics": {
+                                    "current": 3,
+                                    "overcurrent": false,
+                                    "rpm": 5.5
+                                },
+                                "openClose": 100,
+                                "rotate": 80
+                            },
+                            "cameraHead": {
+                                "lights": 15,
+                                "lasers": true,
+                                "tilt": {
+                                    "speed": 15
+                                },
+                                "tiltMotorDiagnostics": {
+                                    "current": 3,
+                                    "overcurrent": false,
+                                    "rpm": 5.5
+                                },
+                                "camera": {
+                                    "focus": {
+                                        "value": 15
+                                    },
+                                    "brightness": 20,
+                                    "exposure": {
+                                        "value": 15
+                                    },
+                                    "saturation": 20,
+                                    "sharpness": 20,
+                                    "zoom": {
+                                        "ration": 15,
+                                        "speed": 15
+                                    }
                                 }
                             }
+                        },
+                        "578954C0A26S": {
+                            "calibrator": true,
+                            "ready": true,
+                            "distance": 15,
+                            "leak": false,
+                            "cpuTemp": 10
+                        },
+                        "63B234C0A269": {
+                            "calibrator": true,
+                            "ready": true,
+                            "distance": 15,
+                            "leak": false,
+                            "cpuTemp": 10,
+                            "battery1": {
+                                "percent": 80,
+                                "voltage": 10,
+                                "charging": 20
+                            },
+                            "battery2": {
+                                "percent": 80,
+                                "voltage": 10,
+                                "charging": 70
+                            },
+                            "motor1Diagnostics": {
+                                "current": 3,
+                                "overcurrent": false,
+                                "rpm": 5.5
+                            },
+                            "motor2Diagnostics": {
+                                "current": 3,
+                                "overcurrent": false,
+                                "rpm": 5.5
+                            },
+                            "speed": 5.5,
+                            "acConnected": false,
+                            "eStop": false
                         }
-                    },
-                    "578954C0A26S": {
-                        "calibrator": true,
-                        "ready": true,
-                        "distance": 15,
-                        "leak": false,
-                        "cpuTemp": 10
-                    },
-                    "63B234C0A269": {
-                        "calibrator": true,
-                        "ready": true,
-                        "distance": 15,
-                        "leak": false,
-                        "cpuTemp": 10,
-                        "battery1": {
-                            "percent": 0.8,
-                            "voltage": 1,
-                            "charging": 2
-                        },
-                        "battery2": {
-                            "percent": 0.8,
-                            "voltage": 1,
-                            "charging": 2
-                        },
-                        "motor1Diagnostics": {
-                            "current": 3,
-                            "overcurret": false,
-                            "rpm": 5.5
-                        },
-                        "motor2Diagnostics": {
-                            "current": 3,
-                            "overcurret": false,
-                            "rpm": 5.5
-                        },
-                        "speed": 5.5,
-                        "acConnected": false,
-                        "eStop": false
                     }
                 }
             }
@@ -384,5 +395,53 @@ describe OroGen.deep_trekker.RevolutionTask do
         assert_equal json_from_sample["apiVersion"], "0.10.3"
         assert_equal json_from_sample["method"], "GET"
         assert_nil json_from_sample["payload"]
+    end
+
+    it "outputs revolution states" do
+        raw_cmd = raw_packet_input
+
+        sample = expect_execution do
+            syskit_write task.data_in_port, raw_cmd
+        end.to do
+            have_one_new_sample task.revolution_states_port
+        end
+
+        json_from_raw = JSON.parse(raw_cmd.data.to_byte_array[8..-1])
+
+        json_root = json_from_raw["payload"]["devices"]["57B974C0A269"]
+        json_light = json_from_raw["payload"]["devices"]["57B974C0A269"] \
+                                  ["auxLights"]
+        json_head = json_from_raw["payload"]["devices"]["57B974C0A269"] \
+                                 ["cameraHead"]
+        json_camera = json_from_raw["payload"]["devices"]["57B974C0A269"] \
+                                   ["cameraHead"]["camera"]
+
+        assert_equal sample.light, json_light / 100.0
+        assert_equal sample.grabber.open_close_motor_overcurrent, 1
+        assert_equal sample.grabber.rotate_overcurrent, 0
+        assert_equal sample.camera_head.light, json_head["lights"] / 100.0
+        assert_equal sample.camera_head.laser, 1
+        assert_equal sample.camera_head.motor_overcurrent, 0
+        assert_in_delta sample.camera_head.camera.brightness, \
+                        json_camera["brightness"] / 100.0, 0.01
+        assert_equal sample.camera_head.camera.exposure, \
+                     json_camera["exposure"]["value"] / 15.0
+        assert_in_delta sample.camera_head.camera.focus, \
+                        json_camera["focus"]["value"] / 100.0, 0.01
+        assert_in_delta sample.camera_head.camera.saturation, \
+                        json_camera["saturation"] / 100.0, 0.01
+        assert_in_delta sample.camera_head.camera.sharpness, \
+                        json_camera["sharpness"] / 100.0
+        assert_equal sample.usage_time.tv_sec, json_root["currentSeconds"]
+        assert_equal sample.front_right_motor_overcurrent, 0
+        assert_equal sample.front_left_motor_overcurrent, 0
+        assert_equal sample.rear_right_motor_overcurrent, 0
+        assert_equal sample.rear_left_motor_overcurrent, 1
+        assert_equal sample.vertical_right_motor_overcurrent, 1
+        assert_equal sample.vertical_left_motor_overcurrent, 1
+        assert_in_delta sample.left_battery.charge,
+                        json_root["leftBattery"]["percent"] / 100.0, 0.01
+        assert_in_delta sample.right_battery.charge,
+                        json_root["rightBattery"]["percent"] / 100.0, 0.01
     end
 end

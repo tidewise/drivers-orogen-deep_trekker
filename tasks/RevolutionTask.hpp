@@ -9,8 +9,7 @@
 #include "deep_trekker/RevolutionTaskBase.hpp"
 #include "iodrivers_base/RawPacket.hpp"
 
-namespace deep_trekker
-{
+namespace deep_trekker {
 
     /*! \class RevolutionTask
      * \brief The task context provides and requires services. It uses an ExecutionEngine
@@ -30,12 +29,11 @@ namespace deep_trekker
      *  It can be dynamically adapted when the deployment is called with a prefix
      argument.
      */
-    class RevolutionTask : public RevolutionTaskBase
-    {
+    class RevolutionTask : public RevolutionTaskBase {
         friend class RevolutionTaskBase;
 
-      protected:
-      public:
+    protected:
+    public:
         /** TaskContext constructor for RevolutionTask
          * \param name Name of the task. This name needs to be unique to make it
          * identifiable via nameservices. \param initial_state The initial TaskState of
@@ -105,7 +103,7 @@ namespace deep_trekker
          */
         void cleanupHook();
 
-      private:
+    private:
         std::string mAPIVersion;
         CommandAndStateMessageParser mMessageParser;
         DevicesMacAddress mDevicesMacAddress;

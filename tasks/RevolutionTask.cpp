@@ -190,8 +190,7 @@ Revolution RevolutionTask::getRevolutionStates()
         mMessageParser.getMotorOvercurrentStates(rev_address,
             "rearRightMotorDiagnostics");
     revolution.rear_left_motor_overcurrent =
-        mMessageParser.getMotorOvercurrentStates(rev_address,
-            "rearLeftMotorDiagnostics");
+        mMessageParser.getMotorOvercurrentStates(rev_address, "rearLeftMotorDiagnostics");
     revolution.vertical_right_motor_overcurrent =
         mMessageParser.getMotorOvercurrentStates(rev_address,
             "verticalRightMotorDiagnostics");
