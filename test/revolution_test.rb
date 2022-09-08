@@ -250,7 +250,6 @@ describe OroGen.deep_trekker.RevolutionTask do
         # Tilt camera head input
         joint_state = Types.base.JointState.new
         joint_state.speed = 3.0
-        joint_state.position = 1.0
         cmd_tilt = Types.base.samples.Joints.new(
             time: Time.now,
             elements: [
@@ -276,8 +275,6 @@ describe OroGen.deep_trekker.RevolutionTask do
                                 ["cameraHead"]["lights"]
         laser = json_from_sample["payload"]["devices"]["57B974C0A269"] \
                                 ["cameraHead"]["lasers"]
-        tilt_position = json_from_sample["payload"]["devices"]["57B974C0A269"] \
-                                        ["cameraHead"]["tilt"]["position"]
         tilt_speed = json_from_sample["payload"]["devices"]["57B974C0A269"] \
                                      ["cameraHead"]["tilt"]["speed"]
         exposure = json_from_sample["payload"]["devices"]["57B974C0A269"] \
@@ -297,7 +294,6 @@ describe OroGen.deep_trekker.RevolutionTask do
 
         assert_equal 0.6 * 100, light # x100 before send to deep_treker
         assert_equal true, laser
-        assert_equal 1.0, tilt_position
         assert_equal 1.0 * 100, tilt_speed # x100 before send to deep_treker
         assert_equal 1 * 15, exposure # x15 before send to deep_treker
         assert_equal 1 * 100, brightness # x100 before send to deep_treker
