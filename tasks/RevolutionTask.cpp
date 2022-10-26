@@ -27,9 +27,11 @@ bool RevolutionTask::configureHook()
     }
     mDevicesMacAddress = _devices_mac_address.get();
     mAPIVersion = _api_version.get();
+    mMotionControllerType = _motion_controller_type.get();
 
     return true;
 }
+
 bool RevolutionTask::startHook()
 {
     if (!RevolutionTaskBase::startHook()) {
@@ -41,6 +43,7 @@ bool RevolutionTask::startHook()
 
     return true;
 }
+
 void RevolutionTask::updateHook()
 {
     queryNewDeviceStateInfo();
@@ -51,7 +54,7 @@ void RevolutionTask::updateHook()
 
     evaluateGrabberCommand();
 
-    evaluatePositionAndLightCommand();
+    evaluateMotionController();
 
     evaluatePoweredReelControlCommand();
 
@@ -102,14 +105,81 @@ void RevolutionTask::evaluatePositionAndLightCommand()
     if (_light_command.read(light_command) == RTT::NoData) {
         return;
     }
-    PositionAndLightCommand command;
+    MotionAndLightCommand command;
     command.light = light_command;
     command.vehicle_setpoint = rov2ref_command;
 
     string address = mDevicesMacAddress.revolution;
     string control_command =
-        mMessageParser.parseRevolutionCommandMessage(mAPIVersion, address, command);
+        mMessageParser.parsePositionRevolutionCommandMessage(mAPIVersion,
+            address,
+            command);
     sendRawDataOutput(control_command);
+}
+
+void RevolutionTask::evaluateVelocityAndLightCommand()
+{
+    commands::LinearAngular6DCommand rov2ref_command;
+    if (_rov2ref_command.read(rov2ref_command) != RTT::NewData) {
+        return;
+    }
+
+    double light_command;
+    if (_light_command.read(light_command) == RTT::NoData) {
+        return;
+    }
+    MotionAndLightCommand command;
+    command.light = light_command;
+    command.vehicle_setpoint = rov2ref_command;
+
+    string address = mDevicesMacAddress.revolution;
+    string control_command =
+        mMessageParser.parseVelocityRevolutionCommandMessage(mAPIVersion,
+            address,
+            command);
+    sendRawDataOutput(control_command);
+}
+
+void RevolutionTask::evaluateAccelerationAndLightCommand()
+{
+    commands::LinearAngular6DCommand rov2ref_command;
+    if (_rov2ref_command.read(rov2ref_command) != RTT::NewData) {
+        return;
+    }
+
+    double light_command;
+    if (_light_command.read(light_command) == RTT::NoData) {
+        return;
+    }
+    MotionAndLightCommand command;
+    command.light = light_command;
+    command.vehicle_setpoint = rov2ref_command;
+
+    string address = mDevicesMacAddress.revolution;
+    string control_command =
+        mMessageParser.parseAccelerationRevolutionCommandMessage(mAPIVersion,
+            address,
+            command);
+    sendRawDataOutput(control_command);
+}
+
+void RevolutionTask::evaluateMotionController()
+{
+    switch (mMotionControllerType) {
+        case position: {
+            evaluatePositionAndLightCommand();
+            return;
+        }
+        case velocity: {
+            evaluateVelocityAndLightCommand();
+            return;
+        }
+        case acceleration:
+            evaluateAccelerationAndLightCommand();
+            return;
+        default:
+            break;
+    }
 }
 
 void RevolutionTask::evaluatePoweredReelControlCommand()

@@ -17,6 +17,9 @@ task_context "RevolutionTask" do
     # Devices mac adress
     property "devices_mac_address", "deep_trekker/DevicesMacAddress"
 
+    # API version
+    property "motion_controller_type", "deep_trekker/MotionControllerType"
+
     # Tilt camera head position/speed joint command
     input_port "tilt_camera_head_command", "base/samples/Joints"
 
