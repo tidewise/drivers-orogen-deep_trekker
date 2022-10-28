@@ -107,9 +107,13 @@ namespace deep_trekker {
         std::string mAPIVersion;
         CommandAndStateMessageParser mMessageParser;
         DevicesMacAddress mDevicesMacAddress;
+        MotionControllerType mMotionControllerType;
+        void evaluateMotionController();
         void evaluateCameraHeadCommand();
         void evaluateGrabberCommand();
         void evaluatePositionAndLightCommand();
+        void evaluateVelocityAndLightCommand();
+        void evaluateAccelerationAndLightCommand();
         void evaluatePoweredReelControlCommand();
         void sendRawDataOutput(std::string control_command);
         void queryNewDeviceStateInfo();

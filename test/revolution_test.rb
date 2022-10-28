@@ -26,8 +26,6 @@ describe OroGen.deep_trekker.RevolutionTask do
         config.powered_reel = "63B234C0A269"
         @task.properties.api_version = "0.10.3"
         @task.properties.devices_mac_address = config
-
-        syskit_configure_and_start(@task)
     end
 
     # revolution msg expected by the deep_trekker
@@ -192,7 +190,9 @@ describe OroGen.deep_trekker.RevolutionTask do
         raw_cmd
     end
 
-    it "sends revolution command" do
+    it "sends position revolution command" do
+        @task.properties.motion_controller_type = :position
+        syskit_configure_and_start(@task)
         raw_cmd = raw_packet_input
         # revolution cmd input
         cmd = Types.base.LinearAngular6DCommand.new
@@ -230,7 +230,89 @@ describe OroGen.deep_trekker.RevolutionTask do
         assert_equal 0.2, local_yaw
     end
 
+    it "sends velocity revolution command" do
+        @task.properties.motion_controller_type = :velocity
+        syskit_configure_and_start(@task)
+        raw_cmd = raw_packet_input
+        # revolution cmd input
+        cmd = Types.base.LinearAngular6DCommand.new
+        cmd.zero!
+        cmd.linear = Eigen::Vector3.new(1, 3, 4)
+        cmd.angular = Eigen::Vector3.new(0, 0, 0.2)
+
+        sample = expect_execution do
+            syskit_write task.light_command_port, 0.2
+            syskit_write task.rov2ref_command_port, cmd
+            syskit_write task.data_in_port, raw_cmd
+        end.to do
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                json["method"] == "SET"
+            end
+        end
+
+        json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
+
+        aux_light = json_from_sample["payload"]["devices"]["57B974C0A269"]["auxLights"]
+        local_x = json_from_sample["payload"]["devices"]["57B974C0A269"]["control"] \
+                                  ["setpoint"]["velocity"]["x"]
+        local_y = json_from_sample["payload"]["devices"]["57B974C0A269"]["control"] \
+                                  ["setpoint"]["velocity"]["y"]
+        local_z = json_from_sample["payload"]["devices"]["57B974C0A269"]["control"] \
+                                  ["setpoint"]["velocity"]["z"]
+        local_yaw = json_from_sample["payload"]["devices"]["57B974C0A269"]["control"] \
+                                    ["setpoint"]["velocity"]["yaw"]
+
+        assert_equal 0.2 * 100, aux_light # x100 before send to deep_treker
+        assert_equal 1, local_x
+        assert_equal 3, local_y
+        assert_equal 4, local_z
+        assert_equal 0.2, local_yaw
+    end
+
+    it "sends acceleration revolution command" do
+        @task.properties.motion_controller_type = :acceleration
+        syskit_configure_and_start(@task)
+        raw_cmd = raw_packet_input
+        # revolution cmd input
+        cmd = Types.base.LinearAngular6DCommand.new
+        cmd.zero!
+        cmd.linear = Eigen::Vector3.new(1, 3, 4)
+        cmd.angular = Eigen::Vector3.new(0, 0, 0.2)
+
+        sample = expect_execution do
+            syskit_write task.light_command_port, 0.2
+            syskit_write task.rov2ref_command_port, cmd
+            syskit_write task.data_in_port, raw_cmd
+        end.to do
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                json["method"] == "SET"
+            end
+        end
+
+        json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
+
+        aux_light = json_from_sample["payload"]["devices"]["57B974C0A269"]["auxLights"]
+        local_x = json_from_sample["payload"]["devices"]["57B974C0A269"]["control"] \
+                                  ["setpoint"]["acceleration"]["x"]
+        local_y = json_from_sample["payload"]["devices"]["57B974C0A269"]["control"] \
+                                  ["setpoint"]["acceleration"]["y"]
+        local_z = json_from_sample["payload"]["devices"]["57B974C0A269"]["control"] \
+                                  ["setpoint"]["acceleration"]["z"]
+        local_yaw = json_from_sample["payload"]["devices"]["57B974C0A269"]["control"] \
+                                    ["setpoint"]["acceleration"]["yaw"]
+
+        assert_equal 0.2 * 100, aux_light # x100 before send to deep_treker
+        assert_equal 1, local_x
+        assert_equal 3, local_y
+        assert_equal 4, local_z
+        assert_equal 0.2, local_yaw
+    end
+
     it "sends tilt camera head command" do
+        @task.properties.motion_controller_type = :position
+        syskit_configure_and_start(@task)
         raw_cmd = raw_packet_input
         # camera head cmd input
         cmd_head = Types.deep_trekker.CameraHeadCommand.new
@@ -305,6 +387,8 @@ describe OroGen.deep_trekker.RevolutionTask do
     end
 
     it "sends grabber command" do
+        @task.properties.motion_controller_type = :acceleration
+        syskit_configure_and_start(@task)
         raw_cmd = raw_packet_input
         # grabber cmd input
         open_close = Types.base.JointState.new
@@ -341,6 +425,8 @@ describe OroGen.deep_trekker.RevolutionTask do
     end
 
     it "sends powered reel command" do
+        @task.properties.motion_controller_type = :velocity
+        syskit_configure_and_start(@task)
         raw_cmd = raw_packet_input
         # powered reel cmd input
         cmd = Types.base.samples.Joints.new(
@@ -375,6 +461,8 @@ describe OroGen.deep_trekker.RevolutionTask do
     end
 
     it "sends query command for new device state info" do
+        @task.properties.motion_controller_type = :velocity
+        syskit_configure_and_start(@task)
         raw_cmd = raw_packet_input
 
         sample = expect_execution do
@@ -394,6 +482,8 @@ describe OroGen.deep_trekker.RevolutionTask do
     end
 
     it "outputs revolution states" do
+        @task.properties.motion_controller_type = :velocity
+        syskit_configure_and_start(@task)
         raw_cmd = raw_packet_input
 
         sample = expect_execution do
