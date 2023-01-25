@@ -65,5 +65,8 @@ task_context "RevolutionTask" do
     # Manual reel states
     output_port "manual_reel_states", "deep_trekker/ManualReel"
 
+    # Camera head angular position feedback
+    output_port "camera_head_tilt_position", "/base/samples/RigidBodyState"
+
     port_driven
 end
