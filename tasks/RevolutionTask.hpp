@@ -122,6 +122,7 @@ namespace deep_trekker {
         ManualReel getManualReelStates();
         PoweredReel getPoweredReelStates();
         base::samples::RigidBodyState getRevolutionBodyStates();
+        base::samples::RigidBodyState getCameraHeadTiltPosition();
         base::samples::Joints getRevolutionMotorStates();
         base::samples::Joints getPoweredReelMotorStates();
         base::samples::Joints getGrabberMotorStates();

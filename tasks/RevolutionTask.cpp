@@ -230,6 +230,7 @@ void RevolutionTask::receiveDeviceStateInfo()
         _revolution_body_states.write(getRevolutionBodyStates());
         _revolution_motor_states.write(getRevolutionMotorStates());
         _grabber_motor_states.write(getGrabberMotorStates());
+        _camera_head_tilt_position.write(getCameraHeadTiltPosition());
     }
 
     if (!mDevicesMacAddress.powered_reel.empty()) {
@@ -286,6 +287,16 @@ samples::RigidBodyState RevolutionTask::getRevolutionBodyStates()
     string rev_address = mDevicesMacAddress.revolution;
 
     return mMessageParser.getRevolutionBodyStates(rev_address);
+}
+
+samples::RigidBodyState RevolutionTask::getCameraHeadTiltPosition()
+{
+    if (!mMessageParser.checkDeviceMacAddress(mDevicesMacAddress.revolution)) {
+        throw invalid_argument("Revolution mac address incorrect");
+    }
+    string rev_address = mDevicesMacAddress.revolution;
+
+    return mMessageParser.getCameraHeadTiltPosition(rev_address);
 }
 
 samples::Joints RevolutionTask::getRevolutionMotorStates()
