@@ -66,12 +66,12 @@ task_context "RevolutionTask" do
     output_port "manual_reel_states", "deep_trekker/ManualReel"
 
     # Camera head angular position feedback
-    output_port "camera_head_tilt_position", "/base/samples/RigidBodyState"
+    output_port "camera_joint_pos2pre_position", "/base/samples/RigidBodyState"
 
     port_driven
 
     transformer do
-        associate_ports_to_transform "camera_head_tilt_position",
-                                     "camera_joint_pre" => "camera_joint_pos"
+        associate_ports_to_transform "camera_joint_pos2pre_position",
+                                     "camera_joint_pos" => "camera_joint_pre"
     end
 end

@@ -230,7 +230,7 @@ void RevolutionTask::receiveDeviceStateInfo()
         _revolution_body_states.write(getRevolutionBodyStates());
         _revolution_motor_states.write(getRevolutionMotorStates());
         _grabber_motor_states.write(getGrabberMotorStates());
-        _camera_head_tilt_position.write(getCameraHeadTiltPosition());
+        _camera_joint_pos2pre_position.write(getCameraHeadTiltPosition());
     }
 
     if (!mDevicesMacAddress.powered_reel.empty()) {
