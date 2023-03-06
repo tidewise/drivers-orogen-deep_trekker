@@ -104,27 +104,29 @@ namespace deep_trekker {
         void cleanupHook();
 
     private:
-        std::string mAPIVersion;
-        CommandAndStateMessageParser mMessageParser;
-        DevicesMacAddress mDevicesMacAddress;
-        MotionControllerType mMotionControllerType;
-        void evaluateMotionController();
+        std::string m_api_version;
+        CommandAndStateMessageParser m_message_parser;
+        DevicesID m_devices_id;
+        DevicesModel m_devices_model;
+
+        void receiveDeviceStateInfo();
+        DevicesID parseDevicesID(Json::Value const& parsed_data,
+            DevicesModel const& model);
+
         void evaluateCameraHeadCommand();
+        void evaluateTiltCameraHeadCommand();
         void evaluateGrabberCommand();
-        void evaluatePositionAndLightCommand();
-        void evaluateVelocityAndLightCommand();
-        void evaluateAccelerationAndLightCommand();
+        void evaluateDriveModeCommand();
+        void evaluateDriveCommand();
         void evaluatePoweredReelControlCommand();
         void sendRawDataOutput(std::string control_command);
-        void queryNewDeviceStateInfo();
-        void receiveDeviceStateInfo();
         Revolution getRevolutionStates();
         ManualReel getManualReelStates();
         PoweredReel getPoweredReelStates();
-        base::samples::RigidBodyState getRevolutionBodyStates();
+        base::samples::RigidBodyState getRevolutionPoseZAttitude();
         base::samples::Joints getRevolutionMotorStates();
         base::samples::Joints getPoweredReelMotorStates();
-        base::samples::Joints getGrabberMotorStates();
+        Grabber getGrabberMotorStates();
     };
 } // namespace deep_trekker
 

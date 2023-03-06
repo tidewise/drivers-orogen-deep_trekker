@@ -13,55 +13,40 @@ task_context "RevolutionTask" do
 
     # API version
     property "api_version", "std/string"
-
-    # Devices mac adress
-    property "devices_mac_address", "deep_trekker/DevicesMacAddress"
-
-    # API version
-    property "motion_controller_type", "deep_trekker/MotionControllerType"
+    property "devices_model", "deep_trekker/DevicesModel"
+    property "devices_id", "deep_trekker/DevicesID"
 
     # Tilt camera head position/speed joint command
     input_port "tilt_camera_head_command", "base/samples/Joints"
-
     # Camera head laser, light and camera commands
     input_port "camera_head_command", "deep_trekker/CameraHeadCommand"
-
     # Grabber raw joint commands
     input_port "grabber_command", "base/samples/Joints"
-
     # Vehicle setpoint in local frame
-    input_port "rov2ref_command", "base/commands/LinearAngular6DCommand"
-
+    input_port "drive_command", "base/commands/LinearAngular6DCommand"
+    # Vehicle setpoint in local frame
+    input_port "drive_mode_command", "deep_trekker/DriveMode"
     # Vehicle light command
     input_port "light_command", "double"
-
     # Powered reel speed joint command
     input_port "powered_reel_command", "base/samples/Joints"
-
     # Rawdata in
     input_port "data_in", "iodrivers_base/RawPacket"
 
     # Rawdata out
     output_port "data_out", "iodrivers_base/RawPacket"
-
     # Revolution states
     output_port "revolution_states", "deep_trekker/Revolution"
-
-    # Revolution body states
-    output_port "revolution_body_states", "base/samples/RigidBodyState"
-
+    # Revolution pose
+    output_port "revolution_pose_z_attitude", "base/samples/RigidBodyState"
     # Revolution motor states
     output_port "revolution_motor_states", "base/samples/Joints"
-
     # Grabber motor states
-    output_port "grabber_motor_states", "base/samples/Joints"
-
+    output_port "grabber_motor_states", "deep_trekker/Grabber"
     # Powered reel states
     output_port "powered_reel_states", "deep_trekker/PoweredReel"
-
     # Powered reel motor states
     output_port "powered_reel_motor_states", "base/samples/Joints"
-
     # Manual reel states
     output_port "manual_reel_states", "deep_trekker/ManualReel"
 
