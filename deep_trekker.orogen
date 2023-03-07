@@ -19,6 +19,9 @@ task_context "RevolutionTask" do
     property "devices_id", "deep_trekker/DevicesID"
     # For how long an input will be repeated before timing out
     property "input_timeout", "base/Time"
+    # Camera head tilt limits
+    property "camera_head_limits", "deep_trekker/CameraHeadLimits"
+
 
     # Tilt camera head position/speed joint command
     input_port "tilt_camera_head_command", "base/samples/Joints"

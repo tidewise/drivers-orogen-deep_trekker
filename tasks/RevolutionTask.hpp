@@ -3,6 +3,7 @@
 #ifndef DEEP_TREKKER_REVOLUTIONTASK_TASK_HPP
 #define DEEP_TREKKER_REVOLUTIONTASK_TASK_HPP
 
+#include "base/Float.hpp"
 #include "deep_trekker/CommandAndStateMessageParser.hpp"
 #include "deep_trekker/DeepTrekkerCommands.hpp"
 #include "deep_trekker/DeepTrekkerStates.hpp"
@@ -115,6 +116,8 @@ namespace deep_trekker {
         DevicesID m_devices_id;
         DevicesModel m_devices_model;
         base::Time m_input_timeout;
+        CameraHeadLimits m_camera_head_limits;
+        double m_camera_head_tilt_position;
         PeriodicPortsDeadline m_deadlines;
 
         void receiveDeviceStateInfo();

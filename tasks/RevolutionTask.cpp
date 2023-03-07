@@ -41,6 +41,7 @@ bool RevolutionTask::configureHook()
     m_devices_model = _devices_model.get();
     m_devices_id = _devices_id.get();
     m_input_timeout = _input_timeout.get();
+    m_camera_head_limits = _camera_head_limits.get();
 
     return true;
 }
@@ -118,6 +119,18 @@ void RevolutionTask::evaluateTiltCameraHeadCommand()
     }
 
     if (Time::now() > m_deadlines.tilt_camera_head) {
+        return;
+    }
+
+    if (isUnknown(m_camera_head_tilt_position)) {
+        return;
+    }
+    if (m_camera_head_tilt_position >= m_camera_head_limits.upper &&
+        tilt_camera_head_command.elements[0].speed > 0) {
+        return;
+    }
+    if (m_camera_head_tilt_position <= m_camera_head_limits.lower &&
+        tilt_camera_head_command.elements[0].speed < 0) {
         return;
     }
 
