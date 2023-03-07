@@ -13,8 +13,12 @@ task_context "RevolutionTask" do
 
     # API version
     property "api_version", "std/string"
+    # The model number of each device
     property "devices_model", "deep_trekker/DevicesModel"
+    # The IDs of each device
     property "devices_id", "deep_trekker/DevicesID"
+    # For how long an input will be repeated before timing out
+    property "input_timeout", "base/Time"
 
     # Tilt camera head position/speed joint command
     input_port "tilt_camera_head_command", "base/samples/Joints"
@@ -36,6 +40,10 @@ task_context "RevolutionTask" do
     # Rawdata out
     output_port "data_out", "iodrivers_base/RawPacket"
     # Revolution states
+    output_port "camera_head_states", "deep_trekker/TiltCameraHead"
+    # Revolution states
+    output_port "camera_head_tilt_states", "base/samples/Joints"
+    # Revolution states
     output_port "revolution_states", "deep_trekker/Revolution"
     # Revolution pose
     output_port "revolution_pose_z_attitude", "base/samples/RigidBodyState"
@@ -50,5 +58,5 @@ task_context "RevolutionTask" do
     # Manual reel states
     output_port "manual_reel_states", "deep_trekker/ManualReel"
 
-    port_driven
+    periodic 0.005
 end

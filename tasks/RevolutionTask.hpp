@@ -103,11 +103,19 @@ namespace deep_trekker {
          */
         void cleanupHook();
 
+        struct PeriodicPortsDeadline {
+            base::Time tilt_camera_head;
+            base::Time drive;
+            base::Time powered_reel;
+        };
+
     private:
         std::string m_api_version;
         CommandAndStateMessageParser m_message_parser;
         DevicesID m_devices_id;
         DevicesModel m_devices_model;
+        base::Time m_input_timeout;
+        PeriodicPortsDeadline m_deadlines;
 
         void receiveDeviceStateInfo();
         DevicesID parseDevicesID(Json::Value const& parsed_data,
@@ -115,16 +123,19 @@ namespace deep_trekker {
 
         void evaluateCameraHeadCommand();
         void evaluateTiltCameraHeadCommand();
+        void evaluateLightCommand();
         void evaluateGrabberCommand();
         void evaluateDriveModeCommand();
         void evaluateDriveCommand();
         void evaluatePoweredReelControlCommand();
         void sendRawDataOutput(std::string control_command);
         Revolution getRevolutionStates();
+        TiltCameraHead getCameraHeadStates();
         ManualReel getManualReelStates();
         PoweredReel getPoweredReelStates();
         base::samples::RigidBodyState getRevolutionPoseZAttitude();
         base::samples::Joints getRevolutionMotorStates();
+        base::samples::Joints getCameraHeadTiltMotorState();
         base::samples::Joints getPoweredReelMotorStates();
         Grabber getGrabberMotorStates();
     };
