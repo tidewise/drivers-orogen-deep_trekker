@@ -42,6 +42,7 @@ bool RevolutionTask::configureHook()
     m_devices_id = _devices_id.get();
     m_input_timeout = _input_timeout.get();
     m_camera_head_limits = _camera_head_limits.get();
+    m_vertical_thrusters_minimum_command = _vertical_thrusters_minimum_command.get();
 
     return true;
 }
@@ -91,7 +92,8 @@ void RevolutionTask::evaluateDriveCommand()
         m_message_parser.parseDriveRevolutionCommandMessage(m_api_version,
             m_devices_id.revolution,
             m_devices_model.revolution,
-            drive);
+            drive,
+            m_vertical_thrusters_minimum_command);
     sendRawDataOutput(drive_command);
 }
 

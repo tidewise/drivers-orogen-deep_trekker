@@ -119,6 +119,7 @@ namespace deep_trekker {
         CameraHeadLimits m_camera_head_limits;
         double m_camera_head_tilt_position;
         PeriodicPortsDeadline m_deadlines;
+        double m_vertical_thrusters_minimum_command = 0;
 
         void receiveDeviceStateInfo();
         DevicesID parseDevicesID(Json::Value const& parsed_data,
