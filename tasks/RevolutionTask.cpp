@@ -10,7 +10,8 @@ using namespace deep_trekker;
 using namespace iodrivers_base;
 
 RevolutionTask::RevolutionTask(std::string const& name)
-    : RevolutionTaskBase(name), m_camera_head_tilt_position(base::unknown<double>())
+    : RevolutionTaskBase(name)
+    , m_camera_head_tilt_position(base::unknown<double>())
 {
 }
 
@@ -18,7 +19,7 @@ RevolutionTask::~RevolutionTask()
 {
 }
 
-void tryWriteIgnoringExceptions(function<void()> write_func)
+void tryParseAndWriteIgnoringExceptions(function<void()> write_func)
 {
     try {
         write_func();
@@ -61,7 +62,8 @@ void RevolutionTask::updateHook()
     receiveDeviceStateInfo();
 
     if (!m_devices_id.revolution.empty()) {
-        evaluateCameraHeadCommand();
+        evaluateCameraHeadLightCommand();
+        evaluateCameraHeadLaserCommand();
         evaluateTiltCameraHeadCommand();
         evaluateLightCommand();
         evaluateGrabberCommand();
@@ -146,25 +148,42 @@ void RevolutionTask::evaluateTiltCameraHeadCommand()
     sendRawDataOutput(control_command);
 }
 
-void RevolutionTask::evaluateCameraHeadCommand()
+void RevolutionTask::evaluateCameraHeadLightCommand()
 {
-    CameraHeadCommand camera_head_command;
-    if (_camera_head_command.read(camera_head_command) == RTT::NoData) {
+    double camera_head_light;
+    if (_camera_head_light.read(camera_head_light) == RTT::NoData) {
         return;
     }
 
     string address = m_devices_id.revolution;
-    string control_command = m_message_parser.parseCameraHeadCommandMessage(m_api_version,
+    string control_command = m_message_parser.parseCameraHeadLightMessage(m_api_version,
         address,
         m_devices_model.revolution,
-        camera_head_command);
+        m_devices_model.camera_head,
+        camera_head_light);
+    sendRawDataOutput(control_command);
+}
+
+void RevolutionTask::evaluateCameraHeadLaserCommand()
+{
+    bool laser_enabled;
+    if (_camera_head_laser_enable.read(laser_enabled) == RTT::NoData) {
+        return;
+    }
+
+    string address = m_devices_id.revolution;
+    string control_command = m_message_parser.parseCameraHeadLaserMessage(m_api_version,
+        address,
+        m_devices_model.revolution,
+        m_devices_model.camera_head,
+        laser_enabled);
     sendRawDataOutput(control_command);
 }
 
 void RevolutionTask::evaluateLightCommand()
 {
     double intensity;
-    if (_light_command.read(intensity) == RTT::NoData) {
+    if (_camera_head_light.read(intensity) == RTT::NoData) {
         return;
     }
 
@@ -234,29 +253,32 @@ void RevolutionTask::receiveDeviceStateInfo()
     }
 
     if (!m_devices_id.revolution.empty()) {
-        tryWriteIgnoringExceptions(
+        tryParseAndWriteIgnoringExceptions(
             [&]() { _revolution_states.write(getRevolutionStates()); });
-        tryWriteIgnoringExceptions(
+        tryParseAndWriteIgnoringExceptions(
             [&]() { _camera_head_states.write(getCameraHeadStates()); });
-        tryWriteIgnoringExceptions(
+        tryParseAndWriteIgnoringExceptions(
             [&]() { _revolution_motor_states.write(getRevolutionMotorStates()); });
-        tryWriteIgnoringExceptions(
+        tryParseAndWriteIgnoringExceptions(
             [&]() { _camera_head_tilt_states.write(getCameraHeadTiltMotorState()); });
-        tryWriteIgnoringExceptions(
+        tryParseAndWriteIgnoringExceptions([&]() {
+            _camera_head_tilt_states_rbs.write(getCameraHeadTiltMotorStateRBS());
+        });
+        tryParseAndWriteIgnoringExceptions(
             [&]() { _grabber_motor_states.write(getGrabberMotorStates()); });
-        tryWriteIgnoringExceptions(
+        tryParseAndWriteIgnoringExceptions(
             [&]() { _revolution_pose_z_attitude.write(getRevolutionPoseZAttitude()); });
     }
 
     if (!m_devices_id.powered_reel.empty()) {
-        tryWriteIgnoringExceptions(
+        tryParseAndWriteIgnoringExceptions(
             [&]() { _powered_reel_states.write(getPoweredReelStates()); });
-        tryWriteIgnoringExceptions(
+        tryParseAndWriteIgnoringExceptions(
             [&]() { _powered_reel_motor_states.write(getPoweredReelMotorStates()); });
     }
 
     if (!m_devices_id.manual_reel.empty()) {
-        tryWriteIgnoringExceptions(
+        tryParseAndWriteIgnoringExceptions(
             [&]() { _manual_reel_states.write(getManualReelStates()); });
     }
 }
@@ -295,7 +317,7 @@ Revolution RevolutionTask::getRevolutionStates()
     revolution.cameras = m_message_parser.getCameras(rev_address);
     revolution.cpu_temperature = m_message_parser.getCpuTemperature(rev_address);
     revolution.drive_modes = m_message_parser.getRevolutionDriveModes(rev_address);
-    revolution.timestamp = Time::now();
+    revolution.time = Time::now();
 
     return revolution;
 }
@@ -322,12 +344,17 @@ samples::Joints RevolutionTask::getCameraHeadTiltMotorState()
     return state;
 }
 
+samples::RigidBodyState RevolutionTask::getCameraHeadTiltMotorStateRBS()
+{
+    return m_message_parser.getCameraHeadTiltMotorStateRBS(m_devices_id.revolution);
+}
+
 PoweredReel RevolutionTask::getPoweredReelStates()
 {
     string pwr_reel = m_devices_id.powered_reel;
 
     PoweredReel powered_reel;
-    powered_reel.timestamp = Time::now();
+    powered_reel.time = Time::now();
     powered_reel.tether_length = m_message_parser.getTetherLength(pwr_reel);
     powered_reel.leak = m_message_parser.isLeaking(pwr_reel);
     powered_reel.cpu_temperature = m_message_parser.getCpuTemperature(pwr_reel);

@@ -125,7 +125,8 @@ namespace deep_trekker {
         DevicesID parseDevicesID(Json::Value const& parsed_data,
             DevicesModel const& model);
 
-        void evaluateCameraHeadCommand();
+        void evaluateCameraHeadLightCommand();
+        void evaluateCameraHeadLaserCommand();
         void evaluateTiltCameraHeadCommand();
         void evaluateLightCommand();
         void evaluateGrabberCommand();
@@ -140,6 +141,7 @@ namespace deep_trekker {
         base::samples::RigidBodyState getRevolutionPoseZAttitude();
         base::samples::Joints getRevolutionMotorStates();
         base::samples::Joints getCameraHeadTiltMotorState();
+        base::samples::RigidBodyState getCameraHeadTiltMotorStateRBS();
         base::samples::Joints getPoweredReelMotorStates();
         Grabber getGrabberMotorStates();
     };

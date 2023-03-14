@@ -27,8 +27,10 @@ task_context "RevolutionTask" do
 
     # Tilt camera head position/speed joint command
     input_port "tilt_camera_head_command", "base/samples/Joints"
-    # Camera head laser, light and camera commands
-    input_port "camera_head_command", "deep_trekker/CameraHeadCommand"
+    # Camera head light command
+    input_port "camera_head_light", "double"
+    # Camera head laser command
+    input_port "camera_head_laser_enable", "bool"
     # Grabber raw joint commands
     input_port "grabber_command", "base/samples/Joints"
     # Vehicle setpoint in local frame
@@ -44,13 +46,15 @@ task_context "RevolutionTask" do
 
     # Rawdata out
     output_port "data_out", "iodrivers_base/RawPacket"
-    # Revolution states
+    # Revolution camera head state
     output_port "camera_head_states", "deep_trekker/TiltCameraHead"
-    # Revolution states
+    # Revolution camera head tilt state
     output_port "camera_head_tilt_states", "base/samples/Joints"
+    # Revolution camera head tilt state in rigid body state form
+    output_port "camera_head_tilt_states_rbs", "base/samples/RigidBodyState"
     # Revolution states
     output_port "revolution_states", "deep_trekker/Revolution"
-    # Revolution pose
+    # Revolution pose (z and attitude)
     output_port "revolution_pose_z_attitude", "base/samples/RigidBodyState"
     # Revolution motor states
     output_port "revolution_motor_states", "base/samples/Joints"
