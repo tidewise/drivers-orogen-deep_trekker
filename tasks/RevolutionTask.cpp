@@ -85,6 +85,9 @@ void RevolutionTask::evaluateDriveCommand()
     if (port_state == RTT::NewData) {
         m_deadlines.drive = Time::now() + m_input_timeout;
     }
+    else if (port_state == RTT::NoData) {
+        return;
+    }
 
     if (Time::now() > m_deadlines.drive) {
         return;
@@ -121,21 +124,24 @@ void RevolutionTask::evaluateTiltCameraHeadCommand()
     if (port_state == RTT::NewData) {
         m_deadlines.tilt_camera_head = Time::now() + m_input_timeout;
     }
+    else if (port_state == RTT::NoData) {
+        return;
+    }
 
     if (Time::now() > m_deadlines.tilt_camera_head) {
         return;
     }
 
     if (isUnknown(m_camera_head_tilt_position)) {
-        return;
+        tilt_camera_head_command.elements[0].speed = 0;
     }
     if (m_camera_head_tilt_position >= m_camera_head_limits.upper &&
         tilt_camera_head_command.elements[0].speed > 0) {
-        return;
+        tilt_camera_head_command.elements[0].speed = 0;
     }
     if (m_camera_head_tilt_position <= m_camera_head_limits.lower &&
         tilt_camera_head_command.elements[0].speed < 0) {
-        return;
+        tilt_camera_head_command.elements[0].speed = 0;
     }
 
     string address = m_devices_id.revolution;
@@ -216,6 +222,10 @@ void RevolutionTask::evaluatePoweredReelControlCommand()
     if (port_state == RTT::NewData) {
         m_deadlines.powered_reel = Time::now() + m_input_timeout;
     }
+    else if (port_state == RTT::NoData) {
+        return;
+    }
+
     if (Time::now() > m_deadlines.powered_reel) {
         return;
     }

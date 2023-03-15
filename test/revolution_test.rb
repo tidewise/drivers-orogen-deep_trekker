@@ -17,7 +17,7 @@ describe OroGen.deep_trekker.RevolutionTask do
         @task = syskit_deploy(
             OroGen.deep_trekker
                   .RevolutionTask
-                  .deployed_as_unmanaged("revolution")
+                  .deployed_as("revolution")
         )
 
         config = Types.deep_trekker.DevicesModel.new
@@ -26,9 +26,14 @@ describe OroGen.deep_trekker.RevolutionTask do
         ids = Types.deep_trekker.DevicesID.new
         ids.revolution = "57B974C0A269"
         ids.powered_reel = "63B234C0A269"
+
         @task.properties.api_version = "0.10.3"
         @task.properties.devices_model = config
         @task.properties.devices_id = ids
+        @task.properties.input_timeout = Time.at(1)
+        @task.properties.camera_head_limits = Types.deep_trekker.CameraHeadLimits.new(
+            upper: 2.62, lower: -1.91
+        )
     end
 
     # revolution msg expected by the deep_trekker
@@ -45,6 +50,7 @@ describe OroGen.deep_trekker.RevolutionTask do
                                 "cpuTemp": 26,
                                 "ip": "10.1.1.1",
                                 "lasers": { "enabled": false },
+                                "leak": false,
                                 "light": { "intensity": 5 },
                                 "model": 102,
                                 "tilt": {
@@ -67,13 +73,13 @@ describe OroGen.deep_trekker.RevolutionTask do
                                         "blabal13123al": {
                                             "active": true
                                         }
-                                    }
-                                },
-                                "type": "MAIN"
+                                    },
+                                    "type": "MAIN"
+                                }
                             },
                             "cpuTemp": 43,
                             "depth": 20,
-                            "drives": {
+                            "drive": {
                                 "modes": {
                                     "altitudeLock": false,
                                     "autoStabilization": true,
@@ -183,11 +189,9 @@ describe OroGen.deep_trekker.RevolutionTask do
 
     it "sends drive revolution command" do
         syskit_configure_and_start(@task)
-        raw_cmd = raw_packet_input
-        # revolution cmd input
         cmd = Types.base.LinearAngular6DCommand.new
         cmd.zero!
-        cmd.linear = Eigen::Vector3.new(1, 3, 4)
+        cmd.linear = Eigen::Vector3.new(1, 0.3, 0.4)
         cmd.angular = Eigen::Vector3.new(0, 0, 0.2)
 
         sample = expect_execution do
@@ -210,23 +214,18 @@ describe OroGen.deep_trekker.RevolutionTask do
         yaw = json_from_sample["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"] \
                               ["yaw"]
 
-        assert_equal 1, fwd
-        assert_equal 3, lat
-        assert_equal 4, vert
-        assert_equal 0.2, yaw
+        assert_equal 100, fwd
+        assert_equal 30, lat
+        assert_equal 40, vert
+        assert_equal 20, yaw
     end
 
-    it "sends camera head command" do
+    it "sends camera light command" do
         syskit_configure_and_start(@task)
-        raw_cmd = raw_packet_input
-        # camera head cmd input
-        cmd_head = Types.deep_trekker.CameraHeadCommand.new
-        cmd_head.time = Time.now
-        cmd_head.light = 0.6
-        cmd_head.laser = true
+        cmd = 0.6
 
         sample = expect_execution do
-            syskit_write task.camera_head_command_port, cmd_head
+            syskit_write task.camera_head_light_port, cmd
         end.to do
             have_one_new_sample(task.data_out_port).matching do |s|
                 json = JSON.parse(s.data.to_byte_array[8..-1])
@@ -238,16 +237,32 @@ describe OroGen.deep_trekker.RevolutionTask do
 
         light = json_from_sample["payload"]["devices"]["57B974C0A269"] \
                                 ["cameraHead"]["light"]["intensity"]
-        laser = json_from_sample["payload"]["devices"]["57B974C0A269"] \
-                                ["cameraHead"]["lasers"]["enabled"]
-
         assert_equal 0.6 * 100, light # x100 before send to deep_treker
+    end
+
+    it "sends camera laser command" do
+        syskit_configure_and_start(@task)
+        laser = true
+
+        sample = expect_execution do
+            syskit_write task.camera_head_laser_enable_port, laser
+        end.to do
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                json["method"] == "SET"
+            end
+        end
+
+        json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
+
+        laser = json_from_sample["payload"]["devices"]["57B974C0A269"] \
+                                ["cameraHead"]["laser"]["enabled"]
         assert_equal true, laser
     end
 
-    it "sends tilt camera head command" do
+    it "sends no tilt camera head command when hasnt received a valid position yet" do
         syskit_configure_and_start(@task)
-        raw_cmd = raw_packet_input
+
         # Tilt camera head input
         joint_state = Types.base.JointState.new
         joint_state.speed = 3.0
@@ -260,8 +275,37 @@ describe OroGen.deep_trekker.RevolutionTask do
         )
 
         expect_execution do
-            syskit_write task.data_in_port, raw_cmd
+            syskit_write task.tilt_camera_head_command_port, cmd_tilt
+        end.to do
+            have_no_new_sample(task.data_out_port)
         end
+    end
+
+    it "sends tilt camera head command when it is at a valid position" do
+        syskit_configure_and_start(@task)
+
+        raw_cmd = raw_packet_input
+        cmd = JSON.parse(raw_cmd.data.to_byte_array[8..-1])
+        cmd["payload"]["devices"]["57B974C0A269"]["cameraHead"]["tilt"]["position"] = 90
+        raw_cmd.data = JSON.dump(cmd).each_char.map(&:ord)
+
+        expect_execution do
+            syskit_write task.data_in_port, raw_cmd
+        end.to do
+            have_one_new_sample(task.camera_head_tilt_states_port)
+        end
+
+        # Tilt camera head input
+        joint_state = Types.base.JointState.new
+        joint_state.speed = 3.0
+        cmd_tilt = Types.base.samples.Joints.new(
+            time: Time.now,
+            elements: [
+                joint_state
+            ],
+            names: %w[joint]
+        )
+
         sample = expect_execution do
             syskit_write task.tilt_camera_head_command_port, cmd_tilt
         end.to do
@@ -276,7 +320,66 @@ describe OroGen.deep_trekker.RevolutionTask do
         tilt_speed = json_from_sample["payload"]["devices"]["57B974C0A269"] \
                                      ["cameraHead"]["tilt"]["speed"]
 
-        assert_equal 1.0 * 100, tilt_speed # x100 before send to deep_treker
+        assert_equal 100, tilt_speed
+    end
+
+    it "doesnt send tilt camera head command when it would go past one of the limits" do
+        syskit_configure_and_start(@task)
+
+        raw_cmd = raw_packet_input
+        cmd = JSON.parse(raw_cmd.data.to_byte_array[8..-1])
+        cmd["payload"]["devices"]["57B974C0A269"]["cameraHead"]["tilt"]["position"] = 150
+        raw_cmd.data = JSON.dump(cmd).each_char.map(&:ord)
+
+        expect_execution do
+            syskit_write task.data_in_port, raw_cmd
+        end.to do
+            have_one_new_sample(task.camera_head_tilt_states_port)
+        end
+
+        # Tilt camera head input
+        joint_state = Types.base.JointState.new
+        joint_state.speed = 0.5
+        cmd_tilt = Types.base.samples.Joints.new(
+            time: Time.now,
+            elements: [
+                joint_state
+            ],
+            names: %w[joint]
+        )
+
+        expect_execution do
+            syskit_write task.tilt_camera_head_command_port, cmd_tilt
+        end.to do
+            have_no_new_sample(task.data_out_port)
+        end
+
+        cmd = JSON.parse(raw_cmd.data.to_byte_array[8..-1])
+        cmd["payload"]["devices"]["57B974C0A269"]["cameraHead"]["tilt"]["position"] = -110
+        raw_cmd.data = JSON.dump(cmd).each_char.map(&:ord)
+
+        expect_execution do
+            syskit_write task.data_in_port, raw_cmd
+        end.to do
+            have_one_new_sample(task.camera_head_tilt_states_port)
+        end
+
+        # Tilt camera head input
+        joint_state = Types.base.JointState.new
+        joint_state.speed = -0.5
+        cmd_tilt = Types.base.samples.Joints.new(
+            time: Time.now,
+            elements: [
+                joint_state
+            ],
+            names: %w[joint]
+        )
+
+        expect_execution do
+            syskit_write task.tilt_camera_head_command_port, cmd_tilt
+        end.to do
+            have_no_new_sample(task.data_out_port)
+        end
     end
 
     it "sends grabber command" do
@@ -316,10 +419,7 @@ describe OroGen.deep_trekker.RevolutionTask do
     end
 
     it "sends powered reel command" do
-        @task.properties.motion_controller_type = :velocity
         syskit_configure_and_start(@task)
-        raw_cmd = raw_packet_input
-        # powered reel cmd input
         cmd = Types.base.samples.Joints.new(
             time: Time.now,
             elements: [
@@ -341,7 +441,7 @@ describe OroGen.deep_trekker.RevolutionTask do
 
         speed = json_from_sample["payload"]["devices"]["63B234C0A269"]["speed"]
 
-        assert_equal -0.25 * 100, speed # x100 before send to deep_treker
+        assert_equal -25, speed
     end
 
     it "outputs revolution states" do
@@ -358,34 +458,29 @@ describe OroGen.deep_trekker.RevolutionTask do
 
         json_root = json_from_raw["payload"]["devices"]["57B974C0A269"]
         json_aux_light = json_from_raw["payload"]["devices"]["57B974C0A269"] \
-                                  ["auxLights"]["intensity"]
+                                  ["auxLight"]["intensity"]
         json_head = json_from_raw["payload"]["devices"]["57B974C0A269"] \
                                  ["cameraHead"]
         json_camera = json_from_raw["payload"]["devices"]["57B974C0A269"] \
                                    ["cameraHead"]["camera"]
 
         assert_equal sample.aux_light, json_aux_light / 100.0
-        assert_equal sample.grabber.open_close_motor_overcurrent, true
-        assert_equal sample.grabber.rotate_overcurrent, false
-        assert_equal sample.camera_head.light, 0.05
-        assert_equal sample.camera_head.laser, false
-        assert_equal sample.camera_head.motor_overcurrent, false
         assert_equal sample.usage_time.tv_sec, json_root["usageTime"]["currentSeconds"]
-        assert_equal sample.front_right_motor_overcurrent, false
-        assert_equal sample.front_left_motor_overcurrent, false
-        assert_equal sample.rear_right_motor_overcurrent, false
-        assert_equal sample.rear_left_motor_overcurrent, true
-        assert_equal sample.vertical_right_motor_overcurrent, true
-        assert_equal sample.vertical_left_motor_overcurrent, true
+        assert_equal sample.front_right_motor_overcurrent, 0
+        assert_equal sample.front_left_motor_overcurrent, 0
+        assert_equal sample.rear_right_motor_overcurrent, 0
+        assert_equal sample.rear_left_motor_overcurrent, 1
+        assert_equal sample.vertical_right_motor_overcurrent, 1
+        assert_equal sample.vertical_left_motor_overcurrent, 1
         assert_in_delta sample.left_battery.charge,
                         json_root["leftBattery"]["percent"] / 100.0, 0.01
         assert_in_delta sample.right_battery.charge,
                         json_root["rightBattery"]["percent"] / 100.0, 0.01
-        assert_equal sample.drive_modes.altitude_lock, false
-        assert_equal sample.drive_modes.heading_lock, false
-        assert_equal sample.drive_modes.depth_lock, false
-        assert_equal sample.drive_modes.auto_stabilization, true
-        assert_equal sample.drive_modes.motors_disabled, true
+        assert_equal sample.drive_modes.altitude_lock, 0
+        assert_equal sample.drive_modes.heading_lock, 0
+        assert_equal sample.drive_modes.depth_lock, 0
+        assert_equal sample.drive_modes.auto_stabilization, 1
+        assert_equal sample.drive_modes.motors_disabled, 1
         assert_equal sample.cpu_temperature, 43
     end
 end
