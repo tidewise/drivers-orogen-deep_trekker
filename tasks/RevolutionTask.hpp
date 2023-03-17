@@ -3,6 +3,7 @@
 #ifndef DEEP_TREKKER_REVOLUTIONTASK_TASK_HPP
 #define DEEP_TREKKER_REVOLUTIONTASK_TASK_HPP
 
+#include "base/Float.hpp"
 #include "deep_trekker/CommandAndStateMessageParser.hpp"
 #include "deep_trekker/DeepTrekkerCommands.hpp"
 #include "deep_trekker/DeepTrekkerStates.hpp"
@@ -103,28 +104,46 @@ namespace deep_trekker {
          */
         void cleanupHook();
 
+        struct PeriodicPortsDeadline {
+            base::Time tilt_camera_head;
+            base::Time drive;
+            base::Time powered_reel;
+        };
+
     private:
-        std::string mAPIVersion;
-        CommandAndStateMessageParser mMessageParser;
-        DevicesMacAddress mDevicesMacAddress;
-        MotionControllerType mMotionControllerType;
-        void evaluateMotionController();
-        void evaluateCameraHeadCommand();
+        std::string m_api_version;
+        CommandAndStateMessageParser m_message_parser;
+        DevicesID m_devices_id;
+        DevicesModel m_devices_model;
+        base::Time m_input_timeout;
+        CameraHeadLimits m_camera_head_limits;
+        double m_camera_head_tilt_position;
+        PeriodicPortsDeadline m_deadlines;
+        double m_vertical_thrusters_minimum_command = 0;
+
+        void receiveDeviceStateInfo();
+        DevicesID parseDevicesID(Json::Value const& parsed_data,
+            DevicesModel const& model);
+
+        void evaluateCameraHeadLightCommand();
+        void evaluateCameraHeadLaserCommand();
+        void evaluateTiltCameraHeadCommand();
+        void evaluateLightCommand();
         void evaluateGrabberCommand();
-        void evaluatePositionAndLightCommand();
-        void evaluateVelocityAndLightCommand();
-        void evaluateAccelerationAndLightCommand();
+        void evaluateDriveModeCommand();
+        void evaluateDriveCommand();
         void evaluatePoweredReelControlCommand();
         void sendRawDataOutput(std::string control_command);
-        void queryNewDeviceStateInfo();
-        void receiveDeviceStateInfo();
         Revolution getRevolutionStates();
+        TiltCameraHead getCameraHeadStates();
         ManualReel getManualReelStates();
         PoweredReel getPoweredReelStates();
-        base::samples::RigidBodyState getRevolutionBodyStates();
+        base::samples::RigidBodyState getRevolutionPoseZAttitude();
         base::samples::Joints getRevolutionMotorStates();
+        base::samples::Joints getCameraHeadTiltMotorState();
+        base::samples::RigidBodyState getCameraHeadTiltMotorStateRBS();
         base::samples::Joints getPoweredReelMotorStates();
-        base::samples::Joints getGrabberMotorStates();
+        Grabber getGrabberMotorStates();
     };
 } // namespace deep_trekker
 
