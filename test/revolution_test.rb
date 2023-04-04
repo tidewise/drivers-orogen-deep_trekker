@@ -323,7 +323,8 @@ describe OroGen.deep_trekker.RevolutionTask do
         assert_equal 100, tilt_speed
     end
 
-    it "doesnt send tilt camera head command when it would go past one of the limits" do
+    it "send tilt camera head command with 0 speed when it would go past " \
+       "one of the limits" do
         syskit_configure_and_start(@task)
 
         raw_cmd = raw_packet_input
@@ -355,7 +356,7 @@ describe OroGen.deep_trekker.RevolutionTask do
         end
 
         cmd = JSON.parse(raw_cmd.data.to_byte_array[8..-1])
-        cmd["payload"]["devices"]["57B974C0A269"]["cameraHead"]["tilt"]["position"] = -110
+        cmd["payload"]["devices"]["57B974C0A269"]["cameraHead"]["tilt"]["position"] = -115
         raw_cmd.data = JSON.dump(cmd).each_char.map(&:ord)
 
         expect_execution do
@@ -375,11 +376,16 @@ describe OroGen.deep_trekker.RevolutionTask do
             names: %w[joint]
         )
 
-        expect_execution do
+        sample = expect_execution do
             syskit_write task.tilt_camera_head_command_port, cmd_tilt
         end.to do
-            have_no_new_sample(task.data_out_port)
+            have_one_new_sample(task.data_out_port)
         end
+
+        json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
+        speed = json_from_sample["payload"]["devices"]["57B974C0A269"]["cameraHead"] \
+                                ["tilt"]["speed"]
+        assert_equal 0, speed
     end
 
     it "sends grabber command" do
