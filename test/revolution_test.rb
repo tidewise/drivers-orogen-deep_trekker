@@ -32,7 +32,7 @@ describe OroGen.deep_trekker.RevolutionTask do
         @task.properties.devices_id = ids
         @task.properties.input_timeout = Time.at(1)
         @task.properties.camera_head_limits = Types.deep_trekker.CameraHeadLimits.new(
-            upper: 2.62, lower: -1.91
+            upper: 2.44, lower: -1.91
         )
     end
 
@@ -325,6 +325,11 @@ describe OroGen.deep_trekker.RevolutionTask do
 
     it "send tilt camera head command with 0 speed when it would go past " \
        "one of the limits" do
+        # Sometimes one of the previously issued tilt commands would still be repeating
+        # as we wrote a new tilt command due to the input timeout being 1s. This would
+        # result in a different sample than the one we expect. Setting this to no input
+        # timeout for this test.
+        @task.properties.input_timeout = Time.at(0)
         syskit_configure_and_start(@task)
 
         raw_cmd = raw_packet_input
@@ -349,11 +354,18 @@ describe OroGen.deep_trekker.RevolutionTask do
             names: %w[joint]
         )
 
-        expect_execution do
+        sample = expect_execution do
             syskit_write task.tilt_camera_head_command_port, cmd_tilt
         end.to do
-            have_no_new_sample(task.data_out_port)
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                json["method"] == "SET"
+            end
         end
+        json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
+        speed = json_from_sample["payload"]["devices"]["57B974C0A269"]["cameraHead"] \
+                                ["tilt"]["speed"]
+        assert_equal 0, speed
 
         cmd = JSON.parse(raw_cmd.data.to_byte_array[8..-1])
         cmd["payload"]["devices"]["57B974C0A269"]["cameraHead"]["tilt"]["position"] = -115
@@ -368,18 +380,15 @@ describe OroGen.deep_trekker.RevolutionTask do
         # Tilt camera head input
         joint_state = Types.base.JointState.new
         joint_state.speed = -0.5
-        cmd_tilt = Types.base.samples.Joints.new(
-            time: Time.now,
-            elements: [
-                joint_state
-            ],
-            names: %w[joint]
-        )
+        cmd_tilt.elements = [joint_state]
 
         sample = expect_execution do
             syskit_write task.tilt_camera_head_command_port, cmd_tilt
         end.to do
-            have_one_new_sample(task.data_out_port)
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                json["method"] == "SET"
+            end
         end
 
         json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
