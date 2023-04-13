@@ -82,14 +82,15 @@ void RevolutionTask::evaluateDriveCommand()
 {
     base::commands::LinearAngular6DCommand drive;
     auto port_state = _drive_command.read(drive);
+    auto now = Time::now();
     if (port_state == RTT::NewData) {
-        m_deadlines.drive = Time::now() + m_input_timeout;
+        m_deadlines.drive = now + m_input_timeout;
     }
     else if (port_state == RTT::NoData) {
         return;
     }
 
-    if (Time::now() > m_deadlines.drive) {
+    if (now > m_deadlines.drive) {
         return;
     }
 
@@ -121,14 +122,16 @@ void RevolutionTask::evaluateTiltCameraHeadCommand()
 {
     samples::Joints tilt_camera_head_command;
     auto port_state = _tilt_camera_head_command.read(tilt_camera_head_command);
+    // Register the time once, allowing for an input timeout of 0
+    Time now = Time::now();
     if (port_state == RTT::NewData) {
-        m_deadlines.tilt_camera_head = Time::now() + m_input_timeout;
+        m_deadlines.tilt_camera_head = now + m_input_timeout;
     }
     else if (port_state == RTT::NoData) {
         return;
     }
 
-    if (Time::now() > m_deadlines.tilt_camera_head) {
+    if (now > m_deadlines.tilt_camera_head) {
         return;
     }
 
@@ -219,14 +222,15 @@ void RevolutionTask::evaluatePoweredReelControlCommand()
 {
     samples::Joints powered_reel_command;
     auto port_state = _powered_reel_command.read(powered_reel_command);
+    auto now = Time::now();
     if (port_state == RTT::NewData) {
-        m_deadlines.powered_reel = Time::now() + m_input_timeout;
+        m_deadlines.powered_reel = now + m_input_timeout;
     }
     else if (port_state == RTT::NoData) {
         return;
     }
 
-    if (Time::now() > m_deadlines.powered_reel) {
+    if (now > m_deadlines.powered_reel) {
         return;
     }
 
