@@ -516,10 +516,6 @@ describe OroGen.deep_trekker.RevolutionTask do
         json_root = json_from_raw["payload"]["devices"]["57B974C0A269"]
         json_aux_light = json_from_raw["payload"]["devices"]["57B974C0A269"] \
                                   ["auxLight"]["intensity"]
-        json_head = json_from_raw["payload"]["devices"]["57B974C0A269"] \
-                                 ["cameraHead"]
-        json_camera = json_from_raw["payload"]["devices"]["57B974C0A269"] \
-                                   ["cameraHead"]["camera"]
 
         assert_equal sample.aux_light, json_aux_light / 100.0
         assert_equal sample.usage_time.tv_sec, json_root["usageTime"]["currentSeconds"]
