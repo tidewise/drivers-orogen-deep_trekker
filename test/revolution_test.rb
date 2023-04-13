@@ -220,6 +220,21 @@ describe OroGen.deep_trekker.RevolutionTask do
         assert_equal 20, yaw
     end
 
+    it "sends auxiliary light command" do
+        syskit_configure_and_start(@task)
+        cmd = 0.4
+
+        sample = expect_execution do
+            syskit_write task.light_command_port, cmd
+        end.to do
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                aux_light = json["payload"]["devices"]["57B974C0A269"]["auxLight"]
+                aux_light["intensity"] == 40
+            end
+        end
+    end
+
     it "sends camera light command" do
         syskit_configure_and_start(@task)
         cmd = 0.6

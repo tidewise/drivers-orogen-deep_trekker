@@ -192,7 +192,7 @@ void RevolutionTask::evaluateCameraHeadLaserCommand()
 void RevolutionTask::evaluateLightCommand()
 {
     double intensity;
-    if (_camera_head_light.read(intensity) == RTT::NoData) {
+    if (_light_command.read(intensity) == RTT::NoData) {
         return;
     }
 
