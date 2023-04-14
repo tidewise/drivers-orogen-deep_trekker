@@ -32,7 +32,7 @@ describe OroGen.deep_trekker.RevolutionTask do
         @task.properties.devices_id = ids
         @task.properties.input_timeout = Time.at(1)
         @task.properties.camera_head_limits = Types.deep_trekker.CameraHeadLimits.new(
-            upper: 2.62, lower: -1.91
+            upper: 2.44, lower: -1.91
         )
     end
 
@@ -220,6 +220,21 @@ describe OroGen.deep_trekker.RevolutionTask do
         assert_equal 20, yaw
     end
 
+    it "sends auxiliary light command" do
+        syskit_configure_and_start(@task)
+        cmd = 0.4
+
+        sample = expect_execution do
+            syskit_write task.light_command_port, cmd
+        end.to do
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                aux_light = json["payload"]["devices"]["57B974C0A269"]["auxLight"]
+                aux_light["intensity"] == 40
+            end
+        end
+    end
+
     it "sends camera light command" do
         syskit_configure_and_start(@task)
         cmd = 0.6
@@ -260,7 +275,7 @@ describe OroGen.deep_trekker.RevolutionTask do
         assert_equal true, laser
     end
 
-    it "sends no tilt camera head command when hasnt received a valid position yet" do
+    it "sends zero speed camera head command when hasnt received a valid position yet" do
         syskit_configure_and_start(@task)
 
         # Tilt camera head input
@@ -277,11 +292,51 @@ describe OroGen.deep_trekker.RevolutionTask do
         expect_execution do
             syskit_write task.tilt_camera_head_command_port, cmd_tilt
         end.to do
-            have_no_new_sample(task.data_out_port)
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                camera_head = json["payload"]["devices"]["57B974C0A269"]["cameraHead"]
+                camera_head["tilt"]["speed"] == 0
+            end
         end
     end
 
-    it "sends tilt camera head command when it is at a valid position" do
+    it "sends a tilt camera head command when has received a valid position" do
+        syskit_configure_and_start(@task)
+
+        raw_cmd = raw_packet_input
+        cmd = JSON.parse(raw_cmd.data.to_byte_array[8..-1])
+        cmd["payload"]["devices"]["57B974C0A269"]["cameraHead"]["tilt"]["position"] = 90
+        raw_cmd.data = JSON.dump(cmd).each_char.map(&:ord)
+
+        expect_execution do
+            syskit_write task.data_in_port, raw_cmd
+        end.to do
+            have_one_new_sample(task.camera_head_tilt_states_port)
+        end
+
+        # Tilt camera head input
+        joint_state = Types.base.JointState.new
+        joint_state.speed = 0.8
+        cmd_tilt = Types.base.samples.Joints.new(
+            time: Time.now,
+            elements: [
+                joint_state
+            ],
+            names: %w[joint]
+        )
+
+        expect_execution do
+            syskit_write task.tilt_camera_head_command_port, cmd_tilt
+        end.to do
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                camera_head = json["payload"]["devices"]["57B974C0A269"]["cameraHead"]
+                camera_head["tilt"]["speed"] == 80
+            end
+        end
+    end
+
+    it "sends at most 100 tilt camera head command when it is above the threshold" do
         syskit_configure_and_start(@task)
 
         raw_cmd = raw_packet_input
@@ -306,25 +361,24 @@ describe OroGen.deep_trekker.RevolutionTask do
             names: %w[joint]
         )
 
-        sample = expect_execution do
+        expect_execution do
             syskit_write task.tilt_camera_head_command_port, cmd_tilt
         end.to do
             have_one_new_sample(task.data_out_port).matching do |s|
                 json = JSON.parse(s.data.to_byte_array[8..-1])
-                json["method"] == "SET"
+                camera_head = json["payload"]["devices"]["57B974C0A269"]["cameraHead"]
+                camera_head["tilt"]["speed"] == 100
             end
         end
-
-        json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
-
-        tilt_speed = json_from_sample["payload"]["devices"]["57B974C0A269"] \
-                                     ["cameraHead"]["tilt"]["speed"]
-
-        assert_equal 100, tilt_speed
     end
 
     it "send tilt camera head command with 0 speed when it would go past " \
        "one of the limits" do
+        # Sometimes one of the previously issued tilt commands would still be repeating
+        # as we wrote a new tilt command due to the input timeout being 1s. This would
+        # result in a different sample than the one we expect. Setting this to no input
+        # timeout for this test.
+        @task.properties.input_timeout = Time.at(0)
         syskit_configure_and_start(@task)
 
         raw_cmd = raw_packet_input
@@ -352,7 +406,11 @@ describe OroGen.deep_trekker.RevolutionTask do
         expect_execution do
             syskit_write task.tilt_camera_head_command_port, cmd_tilt
         end.to do
-            have_no_new_sample(task.data_out_port)
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                camera_head = json["payload"]["devices"]["57B974C0A269"]["cameraHead"]
+                camera_head["tilt"]["speed"] == 0
+            end
         end
 
         cmd = JSON.parse(raw_cmd.data.to_byte_array[8..-1])
@@ -368,24 +426,17 @@ describe OroGen.deep_trekker.RevolutionTask do
         # Tilt camera head input
         joint_state = Types.base.JointState.new
         joint_state.speed = -0.5
-        cmd_tilt = Types.base.samples.Joints.new(
-            time: Time.now,
-            elements: [
-                joint_state
-            ],
-            names: %w[joint]
-        )
+        cmd_tilt.elements = [joint_state]
 
-        sample = expect_execution do
+        expect_execution do
             syskit_write task.tilt_camera_head_command_port, cmd_tilt
         end.to do
-            have_one_new_sample(task.data_out_port)
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                camera_head = json["payload"]["devices"]["57B974C0A269"]["cameraHead"]
+                camera_head["tilt"]["speed"] == 0
+            end
         end
-
-        json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
-        speed = json_from_sample["payload"]["devices"]["57B974C0A269"]["cameraHead"] \
-                                ["tilt"]["speed"]
-        assert_equal 0, speed
     end
 
     it "sends grabber command" do
@@ -465,10 +516,6 @@ describe OroGen.deep_trekker.RevolutionTask do
         json_root = json_from_raw["payload"]["devices"]["57B974C0A269"]
         json_aux_light = json_from_raw["payload"]["devices"]["57B974C0A269"] \
                                   ["auxLight"]["intensity"]
-        json_head = json_from_raw["payload"]["devices"]["57B974C0A269"] \
-                                 ["cameraHead"]
-        json_camera = json_from_raw["payload"]["devices"]["57B974C0A269"] \
-                                   ["cameraHead"]["camera"]
 
         assert_equal sample.aux_light, json_aux_light / 100.0
         assert_equal sample.usage_time.tv_sec, json_root["usageTime"]["currentSeconds"]
