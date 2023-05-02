@@ -13,6 +13,7 @@ RevolutionTask::RevolutionTask(std::string const& name)
     : RevolutionTaskBase(name)
     , m_camera_head_tilt_position(base::unknown<double>())
 {
+    _nwu_magnetic2nwu.set(base::Angle::fromRad(0));
 }
 
 RevolutionTask::~RevolutionTask()
@@ -44,6 +45,8 @@ bool RevolutionTask::configureHook()
     m_input_timeout = _input_timeout.get();
     m_camera_head_limits = _camera_head_limits.get();
     m_vertical_thrusters_minimum_command = _vertical_thrusters_minimum_command.get();
+    m_nwu_magnetic2nwu_ori =
+        Eigen::AngleAxisd(_nwu_magnetic2nwu.get().getRad(), Eigen::Vector3d::UnitZ());
 
     return true;
 }
@@ -343,7 +346,10 @@ TiltCameraHead RevolutionTask::getCameraHeadStates()
 
 samples::RigidBodyState RevolutionTask::getRevolutionPoseZAttitude()
 {
-    return m_message_parser.getRevolutionPoseZAttitude(m_devices_id.revolution);
+    auto rbs = m_message_parser.getRevolutionPoseZAttitude(m_devices_id.revolution);
+    auto rov2nwu_magnetic_ori = rbs.orientation;
+    rbs.orientation = m_nwu_magnetic2nwu_ori * rov2nwu_magnetic_ori;
+    return rbs;
 }
 
 samples::Joints RevolutionTask::getRevolutionMotorStates()

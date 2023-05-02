@@ -54,6 +54,8 @@ task_context "RevolutionTask" do
     output_port "camera_head_tilt_states_rbs", "base/samples/RigidBodyState"
     # Revolution states
     output_port "revolution_states", "deep_trekker/Revolution"
+    # Magnetic declination, added to the heading reported by the ROV
+    property "nwu_magnetic2nwu", "/base/Angle"
     # Revolution pose (z and attitude)
     output_port "revolution_pose_z_attitude", "base/samples/RigidBodyState"
     # Revolution motor states

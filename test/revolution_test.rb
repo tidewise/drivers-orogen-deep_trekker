@@ -114,7 +114,7 @@ describe OroGen.deep_trekker.RevolutionTask do
                                     "rpm": 5.5
                                 }
                             },
-                            "heading": 20,
+                            "heading": 30,
                             "leftBattery": {
                                 "percent": 80,
                                 "voltage": 50,
@@ -137,6 +137,7 @@ describe OroGen.deep_trekker.RevolutionTask do
                                 "charging": 20
                             },
                             "roll": 3,
+                            "pitch": 5,
                             "usageTime": { "currentSeconds": 20, "totalSeconds": 20 },
                             "verticalLeftMotorDiagnostics": {
                                 "current": 3,
@@ -535,5 +536,42 @@ describe OroGen.deep_trekker.RevolutionTask do
         assert_equal sample.drive_modes.auto_stabilization, 1
         assert_equal sample.drive_modes.motors_disabled, 1
         assert_equal sample.cpu_temperature, 43
+    end
+
+    it "outputs the ROV's orientation + Z" do
+        syskit_configure_and_start(@task)
+        raw_cmd = raw_packet_input
+
+        sample = expect_execution do
+            syskit_write task.data_in_port, raw_cmd
+        end.to do
+            have_one_new_sample task.revolution_pose_z_attitude_port
+        end
+
+        assert sample.position.x.nan?
+        assert sample.position.y.nan?
+        assert_in_delta(-20, sample.position.z)
+        assert_in_delta 3 * Math::PI / 180, sample.orientation.roll
+        assert_in_delta 5 * Math::PI / 180, sample.orientation.pitch
+        assert_in_delta 30 * Math::PI / 180, sample.orientation.yaw
+    end
+
+    it "applies the magnetic declination correction" do
+        @task.properties.nwu_magnetic2nwu = { rad: 0.2 }
+        syskit_configure_and_start(@task)
+        raw_cmd = raw_packet_input
+
+        sample = expect_execution do
+            syskit_write task.data_in_port, raw_cmd
+        end.to do
+            have_one_new_sample task.revolution_pose_z_attitude_port
+        end
+
+        assert sample.position.x.nan?
+        assert sample.position.y.nan?
+        assert_in_delta(-20, sample.position.z)
+        assert_in_delta 3 * Math::PI / 180, sample.orientation.roll
+        assert_in_delta 5 * Math::PI / 180, sample.orientation.pitch
+        assert_in_delta(0.2 + 30 * Math::PI / 180, sample.orientation.yaw)
     end
 end
