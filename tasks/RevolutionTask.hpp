@@ -120,6 +120,7 @@ namespace deep_trekker {
         double m_camera_head_tilt_position;
         PeriodicPortsDeadline m_deadlines;
         double m_vertical_thrusters_minimum_command = 0;
+        base::Quaterniond m_nwu_magnetic2nwu_ori;
 
         void receiveDeviceStateInfo();
         DevicesID parseDevicesID(Json::Value const& parsed_data,
