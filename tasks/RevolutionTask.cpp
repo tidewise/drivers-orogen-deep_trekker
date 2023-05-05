@@ -44,7 +44,7 @@ bool RevolutionTask::configureHook()
     m_devices_id = _devices_id.get();
     m_input_timeout = _input_timeout.get();
     m_camera_head_limits = _camera_head_limits.get();
-    m_vertical_thrusters_buoyancy_offset_command = _vertical_thrusters_buoyancy_offset_command.get();
+    m_buoyancy_compensation_offset_command = _buoyancy_compensation_offset_command.get();
     m_nwu_magnetic2nwu_ori =
         Eigen::AngleAxisd(_nwu_magnetic2nwu.get().getRad(), Eigen::Vector3d::UnitZ());
 
@@ -102,7 +102,7 @@ void RevolutionTask::evaluateDriveCommand()
             m_devices_id.revolution,
             m_devices_model.revolution,
             drive,
-            m_vertical_thrusters_buoyancy_offset_command);
+            m_buoyancy_compensation_offset_command);
     sendRawDataOutput(drive_command);
 }
 
