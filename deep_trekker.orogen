@@ -21,8 +21,9 @@ task_context "RevolutionTask" do
     property "input_timeout", "base/Time"
     # Camera head tilt limits
     property "camera_head_limits", "deep_trekker/CameraHeadLimits"
-    # Constant offset command for vertical thrusters to counteract buoyancy
-    property "vertical_thrusters_offset_command", "double"
+    # Constant offset command for vertical thrusters to counteract buoyancy,
+    # it should always be a positive value
+    property "vertical_thrusters_buoyancy_offset_command", "double"
 
     # Tilt camera head position/speed joint command
     input_port "tilt_camera_head_command", "base/samples/Joints"
