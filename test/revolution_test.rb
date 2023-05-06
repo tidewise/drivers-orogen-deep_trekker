@@ -216,9 +216,9 @@ describe OroGen.deep_trekker.RevolutionTask do
                               ["yaw"]
 
         assert_equal 100, fwd
-        assert_equal 30, lat
-        assert_equal 40, vert
-        assert_equal 20, yaw
+        assert_equal -30, lat
+        assert_equal -40, vert
+        assert_equal -20, yaw
     end
 
     it "sends auxiliary light command" do
@@ -553,7 +553,7 @@ describe OroGen.deep_trekker.RevolutionTask do
         assert_in_delta(-20, sample.position.z)
         assert_in_delta 3 * Math::PI / 180, sample.orientation.roll
         assert_in_delta 5 * Math::PI / 180, sample.orientation.pitch
-        assert_in_delta 30 * Math::PI / 180, sample.orientation.yaw
+        assert_in_delta -30 * Math::PI / 180, sample.orientation.yaw
     end
 
     it "applies the magnetic declination correction" do
@@ -572,6 +572,6 @@ describe OroGen.deep_trekker.RevolutionTask do
         assert_in_delta(-20, sample.position.z)
         assert_in_delta 3 * Math::PI / 180, sample.orientation.roll
         assert_in_delta 5 * Math::PI / 180, sample.orientation.pitch
-        assert_in_delta(0.2 + 30 * Math::PI / 180, sample.orientation.yaw)
+        assert_in_delta(0.2 - 30 * Math::PI / 180, sample.orientation.yaw)
     end
 end
