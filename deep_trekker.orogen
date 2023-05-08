@@ -22,7 +22,7 @@ task_context "RevolutionTask" do
     # Camera head tilt limits
     property "camera_head_limits", "deep_trekker/CameraHeadLimits"
     # Constant offset command for vertical thrusters to counteract buoyancy,
-    # it should always be a positive value
+    # as buoyancy is positive in z, it should should be a negative value
     property "buoyancy_compensation_offset_command", "double"
 
     # Tilt camera head position/speed joint command
