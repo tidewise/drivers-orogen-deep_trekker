@@ -64,6 +64,8 @@ task_context "RevolutionTask" do
     output_port "grabber_motor_states", "deep_trekker/Grabber"
     # Powered reel states
     output_port "powered_reel_states", "deep_trekker/PoweredReel"
+    # Tether length
+    output_port "tether_length", "double"
     # Powered reel motor states
     output_port "powered_reel_motor_states", "base/samples/Joints"
     # Manual reel states

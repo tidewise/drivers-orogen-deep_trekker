@@ -288,8 +288,11 @@ void RevolutionTask::receiveDeviceStateInfo()
     }
 
     if (!m_devices_id.powered_reel.empty()) {
-        tryParseAndWriteIgnoringExceptions(
-            [&]() { _powered_reel_states.write(getPoweredReelStates()); });
+        tryParseAndWriteIgnoringExceptions([&]() {
+            auto state = getPoweredReelStates();
+            _tether_length.write(state.tether_length);
+            _powered_reel_states.write(state);
+        });
         tryParseAndWriteIgnoringExceptions(
             [&]() { _powered_reel_motor_states.write(getPoweredReelMotorStates()); });
     }
