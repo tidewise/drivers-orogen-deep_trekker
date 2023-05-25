@@ -24,6 +24,10 @@ task_context "RevolutionTask" do
     # Constant offset command for vertical thrusters to counteract buoyancy,
     # as buoyancy is positive in z, it should should be a negative value
     property "buoyancy_compensation_offset_command", "double"
+    # How often should a request be sent to update the powered reel states
+    property "powered_reel_update_interval", "base/Time"
+    # How often should a request be sent to update the revolution pose z attitude
+    property "pose_z_attitude_update_interval", "base/Time"
 
     # Tilt camera head position/speed joint command
     input_port "tilt_camera_head_command", "base/samples/Joints"

@@ -48,6 +48,27 @@ bool RevolutionTask::configureHook()
     m_nwu_magnetic2nwu_ori =
         Eigen::AngleAxisd(_nwu_magnetic2nwu.get().getRad(), Eigen::Vector3d::UnitZ());
 
+    GetRequestConfig powered_reel_get_request;
+    powered_reel_get_request.update_interval = _powered_reel_update_interval.get();
+    if (!powered_reel_get_request.update_interval.isNull()) {
+        powered_reel_get_request.trigger_deadline = Time::now();
+        powered_reel_get_request.request =
+            m_message_parser.getRequestForPoweredReelStates(m_api_version,
+                m_devices_id.powered_reel);
+    }
+    GetRequestConfig revolution_pose_z_attitude_request;
+    revolution_pose_z_attitude_request.update_interval =
+        _pose_z_attitude_update_interval.get();
+    if (!revolution_pose_z_attitude_request.update_interval.isNull()) {
+        revolution_pose_z_attitude_request.trigger_deadline = Time::now();
+        revolution_pose_z_attitude_request.request =
+            m_message_parser.getRequestForRevolutionPoseZAttitude(m_api_version,
+                m_devices_id.revolution);
+    }
+
+    m_get_requests.push_back(powered_reel_get_request);
+    m_get_requests.push_back(revolution_pose_z_attitude_request);
+
     return true;
 }
 
@@ -64,6 +85,8 @@ void RevolutionTask::updateHook()
 {
     receiveDeviceStateInfo();
 
+    sendGetRequests(m_get_requests);
+
     if (!m_devices_id.revolution.empty()) {
         evaluateCameraHeadLightCommand();
         evaluateCameraHeadLaserCommand();
@@ -79,6 +102,16 @@ void RevolutionTask::updateHook()
     }
 
     RevolutionTaskBase::updateHook();
+}
+
+void RevolutionTask::sendGetRequests(vector<GetRequestConfig> &requests)
+{
+    for (auto& req : requests) {
+        if (!req.update_interval.isNull() && Time::now() > req.trigger_deadline) {
+            sendRawDataOutput(req.request);
+            req.trigger_deadline = Time::now() + req.update_interval;
+        }
+    }
 }
 
 void RevolutionTask::evaluateDriveCommand()
