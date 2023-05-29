@@ -110,6 +110,12 @@ namespace deep_trekker {
             base::Time powered_reel;
         };
 
+        struct GetRequestConfig {
+            std::string request;
+            base::Time update_interval;
+            base::Time trigger_deadline;
+        };
+
     private:
         std::string m_api_version;
         CommandAndStateMessageParser m_message_parser;
@@ -120,6 +126,7 @@ namespace deep_trekker {
         double m_camera_head_tilt_position;
         PeriodicPortsDeadline m_deadlines;
         double m_buoyancy_compensation_offset_command = 0;
+        std::vector<GetRequestConfig> m_get_requests;
         base::Quaterniond m_nwu_magnetic2nwu_ori;
 
         void receiveDeviceStateInfo();
@@ -134,6 +141,7 @@ namespace deep_trekker {
         void evaluateDriveModeCommand();
         void evaluateDriveCommand();
         void evaluatePoweredReelControlCommand();
+        void sendGetRequests(std::vector<GetRequestConfig>& requests);
         void sendRawDataOutput(std::string control_command);
         Revolution getRevolutionStates();
         TiltCameraHead getCameraHeadStates();
