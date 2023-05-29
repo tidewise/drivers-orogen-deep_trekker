@@ -279,7 +279,10 @@ void RevolutionTask::receiveDeviceStateInfo()
         tryParseAndWriteIgnoringExceptions(
             [&]() { _camera_head_tilt_states.write(getCameraHeadTiltMotorState()); });
         tryParseAndWriteIgnoringExceptions([&]() {
-            _camera_head_tilt_states_rbs.write(getCameraHeadTiltMotorStateRBS());
+            auto camera_head_rbs = getCameraHeadTiltMotorStateRBS();
+            camera_head_rbs.sourceFrame = "deep_trekker::body2front_camera_pre";
+            camera_head_rbs.targetFrame = "deep_trekker::body2front_camera_post";
+            _camera_head_tilt_states_rbs.write(camera_head_rbs);
         });
         tryParseAndWriteIgnoringExceptions(
             [&]() { _grabber_motor_states.write(getGrabberMotorStates()); });
@@ -352,6 +355,8 @@ samples::RigidBodyState RevolutionTask::getRevolutionPoseZAttitude()
     auto rbs = m_message_parser.getRevolutionPoseZAttitude(m_devices_id.revolution);
     auto rov2nwu_magnetic_ori = rbs.orientation;
     rbs.orientation = m_nwu_magnetic2nwu_ori * rov2nwu_magnetic_ori;
+    rbs.sourceFrame = "body";
+    rbs.targetFrame = "world";
     return rbs;
 }
 
