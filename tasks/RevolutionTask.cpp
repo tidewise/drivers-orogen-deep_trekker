@@ -39,7 +39,6 @@ bool RevolutionTask::configureHook()
     m_devices_id = _devices_id.get();
     m_input_timeout = _input_timeout.get();
     m_camera_head_limits = _camera_head_limits.get();
-    m_buoyancy_compensation_offset_command = _buoyancy_compensation_offset_command.get();
     m_nwu_magnetic2nwu_ori =
         Eigen::AngleAxisd(_nwu_magnetic2nwu.get().getRad(), Eigen::Vector3d::UnitZ());
 
@@ -161,8 +160,7 @@ void RevolutionTask::evaluateDriveCommand()
         m_message_parser.parseDriveRevolutionCommandMessage(m_api_version,
             m_devices_id.revolution,
             m_devices_model.revolution,
-            compensated_drive,
-            m_buoyancy_compensation_offset_command);
+            compensated_drive);
     sendRawDataOutput(drive_command);
 }
 
