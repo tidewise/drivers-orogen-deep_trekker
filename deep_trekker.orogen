@@ -28,6 +28,16 @@ task_context "RevolutionTask" do
     property "powered_reel_update_interval", "base/Time"
     # How often should a request be sent to update the revolution pose z attitude
     property "pose_z_attitude_update_interval", "base/Time"
+    # Matrix to correct the behavior in drive commands for different axis
+    # and to add offset commands
+    # The first row will compensate the behavior for the linear command in x-axis, the
+    # second for linear command in y-axis, and so on
+    # The 7th column are relative to the offsets
+    #
+    # This matrix has to be 6x7 if one writes this property programmatically (as opposed
+    # to loading it from a YAML file), you must transpose it before writing it. See the
+    # comments in configureHook for more details.
+    property "compensation_matrix", "base/MatrixXd"
 
     # Tilt camera head position/speed joint command
     input_port "tilt_camera_head_command", "base/samples/Joints"

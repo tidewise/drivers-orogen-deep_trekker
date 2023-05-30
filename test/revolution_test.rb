@@ -34,6 +34,18 @@ describe OroGen.deep_trekker.RevolutionTask do
         @task.properties.camera_head_limits = Types.deep_trekker.CameraHeadLimits.new(
             upper: 2.44, lower: -1.91
         )
+        compensation_matrix_transposed = Eigen::MatrixX.new(7, 6)
+        # from_a is column-major, so the the first 7 elements of the array
+        # will be the first column
+        compensation_matrix_transposed.from_a(
+            [1, 0, 0, 0, 0, 0, 0,
+             0, 1.1, 0, 0, 0, 0, 0,
+             0, 0, 1, 0, 0, 0, -0.1,
+             0, 0, 0, 1, 0, 0, 0,
+             0, 0, 0, 0, 1, 0, 0,
+             0, 0, 0, 0, 0, 1, 0]
+        )
+        @task.properties.compensation_matrix = compensation_matrix_transposed
     end
 
     # revolution msg expected by the deep_trekker
@@ -216,8 +228,8 @@ describe OroGen.deep_trekker.RevolutionTask do
                               ["yaw"]
 
         assert_equal 100, fwd
-        assert_equal -30, lat
-        assert_equal -40, vert
+        assert_equal -33, lat
+        assert_equal -30, vert
         assert_equal -20, yaw
     end
 
