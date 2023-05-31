@@ -3,7 +3,6 @@
 #include "RevolutionTask.hpp"
 #include <algorithm>
 #include <base-logging/Logging.hpp>
-
 using namespace std;
 using namespace base;
 using namespace deep_trekker;
@@ -30,10 +29,6 @@ void tryParseAndWriteIgnoringExceptions(function<void()> write_func)
     }
 }
 
-/// The following lines are template definitions for the various state machine
-// hooks defined by Orocos::RTT. See RevolutionTask.hpp for more detailed
-// documentation about them.
-
 bool RevolutionTask::configureHook()
 {
     if (!RevolutionTaskBase::configureHook()) {
@@ -44,9 +39,22 @@ bool RevolutionTask::configureHook()
     m_devices_id = _devices_id.get();
     m_input_timeout = _input_timeout.get();
     m_camera_head_limits = _camera_head_limits.get();
-    m_buoyancy_compensation_offset_command = _buoyancy_compensation_offset_command.get();
     m_nwu_magnetic2nwu_ori =
         Eigen::AngleAxisd(_nwu_magnetic2nwu.get().getRad(), Eigen::Vector3d::UnitZ());
+
+    // Warning: By default, the storage order in Eigen is column-major.
+    // This means that it is in effect transposed on load when compared
+    // with how it looks in YAML, that is the YAML
+    //
+    // thrusterMatrix:
+    // data: [1, 2, 3,
+    //        4, 5, 6]
+    //
+    // Will actually be loaded in thrusterMatrix as row(0) = [1, 4], row(1) = [2, 5] ...
+    //
+    // The transpose here makes sure that one that writes YAML config files gets what
+    // (s)he expects.
+    m_compensation_matrix = _compensation_matrix.get().transpose();
 
     GetRequestConfig powered_reel_get_request;
     powered_reel_get_request.update_interval = _powered_reel_update_interval.get();
@@ -104,7 +112,7 @@ void RevolutionTask::updateHook()
     RevolutionTaskBase::updateHook();
 }
 
-void RevolutionTask::sendGetRequests(vector<GetRequestConfig> &requests)
+void RevolutionTask::sendGetRequests(vector<GetRequestConfig>& requests)
 {
     for (auto& req : requests) {
         if (!req.update_interval.isNull() && Time::now() > req.trigger_deadline) {
@@ -112,6 +120,21 @@ void RevolutionTask::sendGetRequests(vector<GetRequestConfig> &requests)
             req.trigger_deadline = Time::now() + req.update_interval;
         }
     }
+}
+
+base::commands::LinearAngular6DCommand RevolutionTask::compensateDriveCommand(
+    base::commands::LinearAngular6DCommand const& drive_command)
+{
+    Eigen::MatrixXd drive_matrix(7, 1);
+    drive_matrix << drive_command.linear.x(), drive_command.linear.y(),
+        drive_command.linear.z(), drive_command.angular.x(), drive_command.angular.y(),
+        drive_command.angular.z(), 1.0;
+    base::MatrixXd compensated_drive_matrix(6, 1);
+    compensated_drive_matrix = m_compensation_matrix * drive_matrix;
+    base::commands::LinearAngular6DCommand compensated_drive;
+    compensated_drive.linear = compensated_drive_matrix.col(0).head(3);
+    compensated_drive.angular = compensated_drive_matrix.col(0).tail(3);
+    return compensated_drive;
 }
 
 void RevolutionTask::evaluateDriveCommand()
@@ -130,12 +153,14 @@ void RevolutionTask::evaluateDriveCommand()
         return;
     }
 
+    base::commands::LinearAngular6DCommand compensated_drive =
+        compensateDriveCommand(drive);
+
     string drive_command =
         m_message_parser.parseDriveRevolutionCommandMessage(m_api_version,
             m_devices_id.revolution,
             m_devices_model.revolution,
-            drive,
-            m_buoyancy_compensation_offset_command);
+            compensated_drive);
     sendRawDataOutput(drive_command);
 }
 

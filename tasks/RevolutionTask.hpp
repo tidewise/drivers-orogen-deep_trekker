@@ -125,9 +125,9 @@ namespace deep_trekker {
         CameraHeadLimits m_camera_head_limits;
         double m_camera_head_tilt_position;
         PeriodicPortsDeadline m_deadlines;
-        double m_buoyancy_compensation_offset_command = 0;
         std::vector<GetRequestConfig> m_get_requests;
         base::Quaterniond m_nwu_magnetic2nwu_ori;
+        base::MatrixXd m_compensation_matrix;
 
         void receiveDeviceStateInfo();
         DevicesID parseDevicesID(Json::Value const& parsed_data,
@@ -153,6 +153,8 @@ namespace deep_trekker {
         base::samples::RigidBodyState getCameraHeadTiltMotorStateRBS();
         base::samples::Joints getPoweredReelMotorStates();
         Grabber getGrabberMotorStates();
+        base::commands::LinearAngular6DCommand compensateDriveCommand(
+            base::commands::LinearAngular6DCommand const& drive_command);
     };
 } // namespace deep_trekker
 
