@@ -125,15 +125,24 @@ void RevolutionTask::sendGetRequests(vector<GetRequestConfig>& requests)
 base::commands::LinearAngular6DCommand RevolutionTask::compensateDriveCommand(
     base::commands::LinearAngular6DCommand const& drive_command)
 {
+    // Some of these will be always NAN, so we should correct for it.
+    base::commands::LinearAngular6DCommand corrected_drive_command;
+    for (unsigned int i = 0; i < 3; i++)
+    {
+        corrected_drive_command.linear[i] = isUnknown(drive_command.linear[i]) ? 0 : drive_command.linear[i];
+        corrected_drive_command.angular[i] = isUnknown(drive_command.angular[i]) ? 0 : drive_command.angular[i];
+    }
     Eigen::MatrixXd drive_matrix(7, 1);
-    drive_matrix << drive_command.linear.x(), drive_command.linear.y(),
-        drive_command.linear.z(), drive_command.angular.x(), drive_command.angular.y(),
-        drive_command.angular.z(), 1.0;
-    base::MatrixXd compensated_drive_matrix(6, 1);
+    drive_matrix << corrected_drive_command.linear.x(),
+        corrected_drive_command.linear.y(), corrected_drive_command.linear.z(),
+        corrected_drive_command.angular.x(), corrected_drive_command.angular.y(),
+        corrected_drive_command.angular.z(), 1.0;
+    base::Vector6d compensated_drive_matrix;
     compensated_drive_matrix = m_compensation_matrix * drive_matrix;
     base::commands::LinearAngular6DCommand compensated_drive;
-    compensated_drive.linear = compensated_drive_matrix.col(0).head(3);
-    compensated_drive.angular = compensated_drive_matrix.col(0).tail(3);
+    compensated_drive.linear = compensated_drive_matrix.head(3);
+    compensated_drive.angular = compensated_drive_matrix.tail(3);
+    compensated_drive.time = Time::now();
     return compensated_drive;
 }
 
@@ -166,14 +175,13 @@ void RevolutionTask::evaluateDriveCommand()
             true);
     sendRawDataOutput(enable_auto_stabilization);
 
-    base::commands::LinearAngular6DCommand compensated_drive =
-        compensateDriveCommand(drive);
+    m_compensated_command = compensateDriveCommand(drive);
 
     string drive_command =
         m_message_parser.parseDriveRevolutionCommandMessage(m_api_version,
             m_devices_id.revolution,
             m_devices_model.revolution,
-            compensated_drive);
+            m_compensated_command);
     sendRawDataOutput(drive_command);
 }
 
@@ -417,6 +425,7 @@ Revolution RevolutionTask::getRevolutionStates()
     revolution.vertical_left_motor_overcurrent =
         m_message_parser.getMotorOvercurrentStates(rev_address,
             "verticalLeftMotorDiagnostics");
+    revolution.compensated_command = m_compensated_command;
 
     revolution.left_battery =
         m_message_parser.getBatteryStates(rev_address, "leftBattery");
