@@ -337,10 +337,7 @@ void RevolutionTask::receiveDeviceStateInfo()
         tryParseAndWriteIgnoringExceptions(
             [&]() { _camera_head_tilt_states.write(getCameraHeadTiltMotorState()); });
         tryParseAndWriteIgnoringExceptions([&]() {
-            auto camera_head_rbs = getCameraHeadTiltMotorStateRBS();
-            camera_head_rbs.sourceFrame = "deep_trekker::body2front_camera_pre";
-            camera_head_rbs.targetFrame = "deep_trekker::body2front_camera_post";
-            _camera_head_tilt_states_rbs.write(camera_head_rbs);
+            _camera_head_tilt_states_rbs.write(getCameraHeadTiltMotorStateRBS());
         });
         tryParseAndWriteIgnoringExceptions(
             [&]() { _grabber_motor_states.write(getGrabberMotorStates()); });
