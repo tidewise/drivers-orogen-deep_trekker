@@ -140,6 +140,7 @@ namespace deep_trekker {
         void evaluateGrabberCommand();
         void evaluateDriveModeCommand();
         void evaluateDriveCommand();
+        void evaluateMotorsDisabledCommand();
         void evaluatePoweredReelControlCommand();
         void sendGetRequests(std::vector<GetRequestConfig>& requests);
         void sendRawDataOutput(std::string control_command);
@@ -152,6 +153,8 @@ namespace deep_trekker {
         base::samples::Joints getCameraHeadTiltMotorState();
         base::samples::RigidBodyState getCameraHeadTiltMotorStateRBS();
         base::samples::Joints getPoweredReelMotorStates();
+        bool getRevolutionAutoStabilization();
+        bool getRevolutionMotorsDisabled();
         Grabber getGrabberMotorStates();
         base::commands::LinearAngular6DCommand compensateDriveCommand(
             base::commands::LinearAngular6DCommand const& drive_command);

@@ -57,6 +57,8 @@ task_context "RevolutionTask" do
     input_port "powered_reel_command", "base/samples/Joints"
     # Rawdata in
     input_port "data_in", "iodrivers_base/RawPacket"
+    # Rawdata in
+    input_port "motors_disabled", "bool"
 
     # Rawdata out
     output_port "data_out", "iodrivers_base/RawPacket"
@@ -84,6 +86,10 @@ task_context "RevolutionTask" do
     output_port "powered_reel_motor_states", "base/samples/Joints"
     # Manual reel states
     output_port "manual_reel_states", "deep_trekker/ManualReel"
+    # Whether motors are disabled
+    output_port "motors_disabled_state", "bool"
+    # Whether auto stabilization is enabled
+    output_port "auto_stabilization_state", "bool"
 
     periodic 0.005
 end

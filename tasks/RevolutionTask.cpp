@@ -146,12 +146,25 @@ void RevolutionTask::evaluateDriveCommand()
         m_deadlines.drive = now + m_input_timeout;
     }
     else if (port_state == RTT::NoData) {
+        string disable_auto_stabilization =
+            m_message_parser.parseAutoStabilizationRevolutionCommandMessage(m_api_version,
+                m_devices_id.revolution,
+                m_devices_model.revolution,
+                false);
+        sendRawDataOutput(disable_auto_stabilization);
         return;
     }
 
     if (now > m_deadlines.drive) {
         return;
     }
+
+    string enable_auto_stabilization =
+        m_message_parser.parseAutoStabilizationRevolutionCommandMessage(m_api_version,
+            m_devices_id.revolution,
+            m_devices_model.revolution,
+            true);
+    sendRawDataOutput(enable_auto_stabilization);
 
     base::commands::LinearAngular6DCommand compensated_drive =
         compensateDriveCommand(drive);
@@ -177,6 +190,21 @@ void RevolutionTask::evaluateDriveModeCommand()
             m_devices_model.revolution,
             mode);
     sendRawDataOutput(mode_command);
+}
+
+void RevolutionTask::evaluateMotorsDisabledCommand()
+{
+    bool motors_disabled;
+    if (_motors_disabled.read(motors_disabled) == RTT::NoData) {
+        return;
+    }
+
+    string command =
+        m_message_parser.parseMotorsDisabledRevolutionCommandMessage(m_api_version,
+            m_devices_id.revolution,
+            m_devices_model.revolution,
+            motors_disabled);
+    sendRawDataOutput(command);
 }
 
 void RevolutionTask::evaluateTiltCameraHeadCommand()
@@ -331,6 +359,10 @@ void RevolutionTask::receiveDeviceStateInfo()
         tryParseAndWriteIgnoringExceptions(
             [&]() { _revolution_states.write(getRevolutionStates()); });
         tryParseAndWriteIgnoringExceptions(
+            [&]() { _motors_disabled_state.write(getRevolutionMotorsDisabled()); });
+        tryParseAndWriteIgnoringExceptions(
+            [&]() { _auto_stabilization_state.write(getRevolutionAutoStabilization()); });
+        tryParseAndWriteIgnoringExceptions(
             [&]() { _camera_head_states.write(getCameraHeadStates()); });
         tryParseAndWriteIgnoringExceptions(
             [&]() { _revolution_motor_states.write(getRevolutionMotorStates()); });
@@ -430,6 +462,16 @@ samples::Joints RevolutionTask::getCameraHeadTiltMotorState()
 samples::RigidBodyState RevolutionTask::getCameraHeadTiltMotorStateRBS()
 {
     return m_message_parser.getCameraHeadTiltMotorStateRBS(m_devices_id.revolution);
+}
+
+bool RevolutionTask::getRevolutionAutoStabilization()
+{
+    return m_message_parser.getRevolutionAutoStabilization(m_devices_id.revolution);
+}
+
+bool RevolutionTask::getRevolutionMotorsDisabled()
+{
+    return m_message_parser.getRevolutionMotorsDisabled(m_devices_id.revolution);
 }
 
 PoweredReel RevolutionTask::getPoweredReelStates()

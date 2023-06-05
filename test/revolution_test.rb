@@ -212,19 +212,61 @@ describe OroGen.deep_trekker.RevolutionTask do
         end.to do
             have_one_new_sample(task.data_out_port).matching do |s|
                 json = JSON.parse(s.data.to_byte_array[8..-1])
-                json["method"] == "SET"
+                next if json["method"] != "SET"
+
+                json["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"]
             end
         end
 
-        json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
+        json = JSON.parse(sample.data.to_byte_array[8..-1])
 
-        fwd = json_from_sample["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"] \
+        fwd = json["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"]["forward"]
+        lat = json["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"]["lateral"]
+        vert = json["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"]["vertical"]
+        yaw = json["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"]["yaw"]
+
+        assert_equal 100, fwd
+        assert_equal -33, lat
+        assert_equal -30, vert
+        assert_equal -20, yaw
+    end
+
+    it "sends drive revolution command and turns auto stabilization" do
+        syskit_configure_and_start(@task)
+        cmd = Types.base.LinearAngular6DCommand.new
+        cmd.zero!
+        cmd.linear = Eigen::Vector3.new(1, 0.3, 0.4)
+        cmd.angular = Eigen::Vector3.new(0, 0, 0.2)
+
+        sample = expect_execution do
+            syskit_write task.drive_command_port, cmd
+        end.to do
+            [
+                have_one_new_sample(task.data_out_port).matching do |s|
+                    json = JSON.parse(s.data.to_byte_array[8..-1])
+                    next if json["method"] != "SET"
+
+                    json["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"]
+                end,
+                have_one_new_sample(task.data_out_port).matching do |s|
+                    json = JSON.parse(s.data.to_byte_array[8..-1])
+                    next if json["method"] != "SET"
+
+                    modes = json["payload"]["devices"]["57B974C0A269"]["drive"]["modes"]
+                    modes["autoStabilization"] == true
+                end
+            ]
+        end
+
+        json = JSON.parse(sample[0].data.to_byte_array[8..-1])
+
+        fwd = json["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"] \
                               ["forward"]
-        lat = json_from_sample["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"] \
+        lat = json["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"] \
                               ["lateral"]
-        vert = json_from_sample["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"] \
+        vert = json["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"] \
                               ["vertical"]
-        yaw = json_from_sample["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"] \
+        yaw = json["payload"]["devices"]["57B974C0A269"]["drive"]["thrust"] \
                               ["yaw"]
 
         assert_equal 100, fwd
@@ -233,15 +275,36 @@ describe OroGen.deep_trekker.RevolutionTask do
         assert_equal -20, yaw
     end
 
+    it "turns auto stabilization off when the drive command port is not connected" do
+        syskit_configure_and_start(@task)
+
+        expect_execution do
+            syskit_write task.light_command_port, 0.4
+        end.to do
+            have_one_new_sample(task.data_out_port).matching do |s|
+                json = JSON.parse(s.data.to_byte_array[8..-1])
+                next unless json["method"] == "SET"
+
+                drive = json["payload"]["devices"]["57B974C0A269"]["drive"]
+                next unless drive
+
+                drive["modes"]["autoStabilization"] == false
+            end
+        end
+    end
+
     it "sends auxiliary light command" do
         syskit_configure_and_start(@task)
         cmd = 0.4
 
-        sample = expect_execution do
+        expect_execution do
             syskit_write task.light_command_port, cmd
         end.to do
             have_one_new_sample(task.data_out_port).matching do |s|
                 json = JSON.parse(s.data.to_byte_array[8..-1])
+                next unless json["method"] == "SET"
+                next unless json["payload"]["devices"]["57B974C0A269"]["auxLight"]
+
                 aux_light = json["payload"]["devices"]["57B974C0A269"]["auxLight"]
                 aux_light["intensity"] == 40
             end
@@ -252,40 +315,36 @@ describe OroGen.deep_trekker.RevolutionTask do
         syskit_configure_and_start(@task)
         cmd = 0.6
 
-        sample = expect_execution do
+        expect_execution do
             syskit_write task.camera_head_light_port, cmd
         end.to do
             have_one_new_sample(task.data_out_port).matching do |s|
                 json = JSON.parse(s.data.to_byte_array[8..-1])
-                json["method"] == "SET"
+                next unless json["method"] == "SET"
+                next unless json["payload"]["devices"]["57B974C0A269"]["cameraHead"]
+
+                camera_head = json["payload"]["devices"]["57B974C0A269"]["cameraHead"]
+                camera_head["light"]["intensity"] == 0.6 * 100
             end
         end
-
-        json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
-
-        light = json_from_sample["payload"]["devices"]["57B974C0A269"] \
-                                ["cameraHead"]["light"]["intensity"]
-        assert_equal 0.6 * 100, light # x100 before send to deep_treker
     end
 
     it "sends camera laser command" do
         syskit_configure_and_start(@task)
         laser = true
 
-        sample = expect_execution do
+        expect_execution do
             syskit_write task.camera_head_laser_enable_port, laser
         end.to do
             have_one_new_sample(task.data_out_port).matching do |s|
                 json = JSON.parse(s.data.to_byte_array[8..-1])
-                json["method"] == "SET"
+                next unless json["method"] == "SET"
+                next unless json["payload"]["devices"]["57B974C0A269"]["cameraHead"]
+
+                json["payload"]["devices"]["57B974C0A269"] \
+                    ["cameraHead"]["laser"]["enabled"] == true
             end
         end
-
-        json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
-
-        laser = json_from_sample["payload"]["devices"]["57B974C0A269"] \
-                                ["cameraHead"]["laser"]["enabled"]
-        assert_equal true, laser
     end
 
     it "sends zero speed camera head command when hasnt received a valid position yet" do
@@ -307,7 +366,11 @@ describe OroGen.deep_trekker.RevolutionTask do
         end.to do
             have_one_new_sample(task.data_out_port).matching do |s|
                 json = JSON.parse(s.data.to_byte_array[8..-1])
+                next unless json["method"] == "SET"
+
                 camera_head = json["payload"]["devices"]["57B974C0A269"]["cameraHead"]
+                next unless camera_head
+
                 camera_head["tilt"]["speed"] == 0
             end
         end
@@ -344,6 +407,8 @@ describe OroGen.deep_trekker.RevolutionTask do
             have_one_new_sample(task.data_out_port).matching do |s|
                 json = JSON.parse(s.data.to_byte_array[8..-1])
                 camera_head = json["payload"]["devices"]["57B974C0A269"]["cameraHead"]
+                next unless camera_head
+
                 camera_head["tilt"]["speed"] == 80
             end
         end
@@ -379,6 +444,9 @@ describe OroGen.deep_trekker.RevolutionTask do
         end.to do
             have_one_new_sample(task.data_out_port).matching do |s|
                 json = JSON.parse(s.data.to_byte_array[8..-1])
+                camera_head = json["payload"]["devices"]["57B974C0A269"]["cameraHead"]
+                next unless camera_head
+
                 camera_head = json["payload"]["devices"]["57B974C0A269"]["cameraHead"]
                 camera_head["tilt"]["speed"] == 100
             end
@@ -421,7 +489,11 @@ describe OroGen.deep_trekker.RevolutionTask do
         end.to do
             have_one_new_sample(task.data_out_port).matching do |s|
                 json = JSON.parse(s.data.to_byte_array[8..-1])
+                next unless json["method"] == "SET"
+
                 camera_head = json["payload"]["devices"]["57B974C0A269"]["cameraHead"]
+                next unless camera_head
+
                 camera_head["tilt"]["speed"] == 0
             end
         end
@@ -446,7 +518,11 @@ describe OroGen.deep_trekker.RevolutionTask do
         end.to do
             have_one_new_sample(task.data_out_port).matching do |s|
                 json = JSON.parse(s.data.to_byte_array[8..-1])
+                next unless json["method"] == "SET"
+
                 camera_head = json["payload"]["devices"]["57B974C0A269"]["cameraHead"]
+                next unless camera_head
+
                 camera_head["tilt"]["speed"] == 0
             end
         end
@@ -474,7 +550,9 @@ describe OroGen.deep_trekker.RevolutionTask do
         end.to do
             have_one_new_sample(task.data_out_port).matching do |s|
                 json = JSON.parse(s.data.to_byte_array[8..-1])
-                json["method"] == "SET"
+                next unless json["method"] == "SET"
+
+                json["payload"]["devices"]["57B974C0A269"]["grabber"]
             end
         end
 
@@ -498,20 +576,17 @@ describe OroGen.deep_trekker.RevolutionTask do
             names: %w[joint]
         )
 
-        sample = expect_execution do
+        expect_execution do
             syskit_write task.powered_reel_command_port, cmd
         end.to do
             have_one_new_sample(task.data_out_port).matching do |s|
                 json = JSON.parse(s.data.to_byte_array[8..-1])
-                json["method"] == "SET"
+                next unless json["method"] == "SET"
+                next unless json["payload"]["devices"]["63B234C0A269"]
+
+                json["payload"]["devices"]["63B234C0A269"]["speed"] == -25
             end
         end
-
-        json_from_sample = JSON.parse(sample.data.to_byte_array[8..-1])
-
-        speed = json_from_sample["payload"]["devices"]["63B234C0A269"]["speed"]
-
-        assert_equal -25, speed
     end
 
     it "outputs revolution states" do
@@ -545,8 +620,6 @@ describe OroGen.deep_trekker.RevolutionTask do
         assert_equal sample.drive_modes.altitude_lock, 0
         assert_equal sample.drive_modes.heading_lock, 0
         assert_equal sample.drive_modes.depth_lock, 0
-        assert_equal sample.drive_modes.auto_stabilization, 1
-        assert_equal sample.drive_modes.motors_disabled, 1
         assert_equal sample.cpu_temperature, 43
     end
 
