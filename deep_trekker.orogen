@@ -38,6 +38,9 @@ task_context "RevolutionTask" do
     # to loading it from a YAML file), you must transpose it before writing it. See the
     # comments in configureHook for more details.
     property "compensation_matrix", "base/MatrixXd"
+    # Describes what's the update interval to send get requests for specific data in the
+    # API.
+    property "get_requests_intervals", "deep_trekker/GetRequestsIntervals"
 
     # Tilt camera head position/speed joint command
     input_port "tilt_camera_head_command", "base/samples/Joints"
