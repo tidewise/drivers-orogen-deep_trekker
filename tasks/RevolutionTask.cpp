@@ -29,8 +29,7 @@ void tryParseAndWriteIgnoringExceptions(function<void()> write_func)
     }
 }
 
-void RevolutionTask::configureGetRequest(Time const& update_interval,
-    std::string request)
+void RevolutionTask::configureGetRequest(Time const& update_interval, std::string request)
 {
     GetRequestConfig request_config;
     request_config.update_interval = update_interval;
@@ -130,10 +129,11 @@ base::commands::LinearAngular6DCommand RevolutionTask::compensateDriveCommand(
 {
     // Some of these will be always NAN, so we should correct for it.
     base::commands::LinearAngular6DCommand corrected_drive_command;
-    for (unsigned int i = 0; i < 3; i++)
-    {
-        corrected_drive_command.linear[i] = isUnknown(drive_command.linear[i]) ? 0 : drive_command.linear[i];
-        corrected_drive_command.angular[i] = isUnknown(drive_command.angular[i]) ? 0 : drive_command.angular[i];
+    for (unsigned int i = 0; i < 3; i++) {
+        corrected_drive_command.linear[i] =
+            isUnknown(drive_command.linear[i]) ? 0 : drive_command.linear[i];
+        corrected_drive_command.angular[i] =
+            isUnknown(drive_command.angular[i]) ? 0 : drive_command.angular[i];
     }
     Eigen::MatrixXd drive_matrix(7, 1);
     drive_matrix << corrected_drive_command.linear.x(),
