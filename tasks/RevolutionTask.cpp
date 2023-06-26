@@ -74,8 +74,19 @@ bool RevolutionTask::configureHook()
                 m_devices_id.revolution);
     }
 
+    GetRequestConfig revolution_camera_head_tilt;
+    revolution_camera_head_tilt.update_interval =
+        _pose_z_attitude_update_interval.get();
+    if (!revolution_camera_head_tilt.update_interval.isNull()) {
+        revolution_camera_head_tilt.trigger_deadline = Time::now();
+        revolution_camera_head_tilt.request =
+            m_message_parser.getRequestForRevolutionCameraHead(m_api_version,
+                m_devices_id.revolution);
+    }
+
     m_get_requests.push_back(powered_reel_get_request);
     m_get_requests.push_back(revolution_pose_z_attitude_request);
+    m_get_requests.push_back(revolution_camera_head_tilt);
 
     return true;
 }
