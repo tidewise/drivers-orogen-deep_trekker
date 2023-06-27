@@ -36,8 +36,8 @@ void RevolutionTask::configureGetRequest(Time const& update_interval, std::strin
     if (!update_interval.isNull()) {
         request_config.trigger_deadline = Time::now();
         request_config.request = request;
+        m_get_requests.push_back(request_config);
     }
-    m_get_requests.push_back(request_config);
 }
 
 bool RevolutionTask::configureHook()
@@ -67,6 +67,7 @@ bool RevolutionTask::configureHook()
     // (s)he expects.
     m_compensation_matrix = _compensation_matrix.get().transpose();
 
+    m_get_requests.clear();
     GetRequestsIntervals intervals = _get_requests_intervals.get();
 
     configureGetRequest(intervals.revolution_pose_z_attitude,
@@ -117,7 +118,7 @@ void RevolutionTask::updateHook()
 void RevolutionTask::sendGetRequests(vector<GetRequestConfig>& requests)
 {
     for (auto& req : requests) {
-        if (!req.update_interval.isNull() && Time::now() > req.trigger_deadline) {
+        if (Time::now() > req.trigger_deadline) {
             sendRawDataOutput(req.request);
             req.trigger_deadline = Time::now() + req.update_interval;
         }
