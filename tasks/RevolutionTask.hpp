@@ -143,6 +143,7 @@ namespace deep_trekker {
         void evaluateDriveCommand();
         void evaluateMotorsDisabledCommand();
         void evaluatePoweredReelControlCommand();
+        void configureGetRequest(base::Time const& update_interval, std::string request);
         void sendGetRequests(std::vector<GetRequestConfig>& requests);
         void sendRawDataOutput(std::string control_command);
         Revolution getRevolutionStates();

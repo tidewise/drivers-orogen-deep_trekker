@@ -29,6 +29,17 @@ void tryParseAndWriteIgnoringExceptions(function<void()> write_func)
     }
 }
 
+void RevolutionTask::configureGetRequest(Time const& update_interval, std::string request)
+{
+    GetRequestConfig request_config;
+    request_config.update_interval = update_interval;
+    if (!update_interval.isNull()) {
+        request_config.trigger_deadline = Time::now();
+        request_config.request = request;
+        m_get_requests.push_back(request_config);
+    }
+}
+
 bool RevolutionTask::configureHook()
 {
     if (!RevolutionTaskBase::configureHook()) {
@@ -56,26 +67,18 @@ bool RevolutionTask::configureHook()
     // (s)he expects.
     m_compensation_matrix = _compensation_matrix.get().transpose();
 
-    GetRequestConfig powered_reel_get_request;
-    powered_reel_get_request.update_interval = _powered_reel_update_interval.get();
-    if (!powered_reel_get_request.update_interval.isNull()) {
-        powered_reel_get_request.trigger_deadline = Time::now();
-        powered_reel_get_request.request =
-            m_message_parser.getRequestForPoweredReelStates(m_api_version,
-                m_devices_id.powered_reel);
-    }
-    GetRequestConfig revolution_pose_z_attitude_request;
-    revolution_pose_z_attitude_request.update_interval =
-        _pose_z_attitude_update_interval.get();
-    if (!revolution_pose_z_attitude_request.update_interval.isNull()) {
-        revolution_pose_z_attitude_request.trigger_deadline = Time::now();
-        revolution_pose_z_attitude_request.request =
-            m_message_parser.getRequestForRevolutionPoseZAttitude(m_api_version,
-                m_devices_id.revolution);
-    }
+    m_get_requests.clear();
+    GetRequestsIntervals intervals = _get_requests_intervals.get();
 
-    m_get_requests.push_back(powered_reel_get_request);
-    m_get_requests.push_back(revolution_pose_z_attitude_request);
+    configureGetRequest(intervals.revolution_pose_z_attitude,
+        m_message_parser.getRequestForRevolutionPoseZAttitude(m_api_version,
+            m_devices_id.revolution));
+    configureGetRequest(intervals.powered_reel,
+        m_message_parser.getRequestForPoweredReelStates(m_api_version,
+            m_devices_id.powered_reel));
+    configureGetRequest(intervals.camera_head,
+        m_message_parser.getRequestForRevolutionCameraHead(m_api_version,
+            m_devices_id.revolution));
 
     return true;
 }
@@ -115,7 +118,7 @@ void RevolutionTask::updateHook()
 void RevolutionTask::sendGetRequests(vector<GetRequestConfig>& requests)
 {
     for (auto& req : requests) {
-        if (!req.update_interval.isNull() && Time::now() > req.trigger_deadline) {
+        if (Time::now() > req.trigger_deadline) {
             sendRawDataOutput(req.request);
             req.trigger_deadline = Time::now() + req.update_interval;
         }
@@ -127,10 +130,11 @@ base::commands::LinearAngular6DCommand RevolutionTask::compensateDriveCommand(
 {
     // Some of these will be always NAN, so we should correct for it.
     base::commands::LinearAngular6DCommand corrected_drive_command;
-    for (unsigned int i = 0; i < 3; i++)
-    {
-        corrected_drive_command.linear[i] = isUnknown(drive_command.linear[i]) ? 0 : drive_command.linear[i];
-        corrected_drive_command.angular[i] = isUnknown(drive_command.angular[i]) ? 0 : drive_command.angular[i];
+    for (unsigned int i = 0; i < 3; i++) {
+        corrected_drive_command.linear[i] =
+            isUnknown(drive_command.linear[i]) ? 0 : drive_command.linear[i];
+        corrected_drive_command.angular[i] =
+            isUnknown(drive_command.angular[i]) ? 0 : drive_command.angular[i];
     }
     Eigen::MatrixXd drive_matrix(7, 1);
     drive_matrix << corrected_drive_command.linear.x(),
