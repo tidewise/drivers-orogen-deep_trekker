@@ -41,6 +41,8 @@ task_context "RevolutionTask" do
     # Describes what's the update interval to send get requests for specific data in the
     # API.
     property "get_requests_intervals", "deep_trekker/GetRequestsIntervals"
+    # Magnetic declination, added to the heading reported by the ROV
+    property "nwu_magnetic2nwu", "/base/Angle"
 
     # Tilt camera head position/speed joint command
     input_port "tilt_camera_head_command", "base/samples/Joints"
@@ -73,8 +75,6 @@ task_context "RevolutionTask" do
     output_port "camera_head_tilt_states_rbs", "base/samples/RigidBodyState"
     # Revolution states
     output_port "revolution_states", "deep_trekker/Revolution"
-    # Magnetic declination, added to the heading reported by the ROV
-    property "nwu_magnetic2nwu", "/base/Angle"
     # Revolution pose (z and attitude)
     output_port "revolution_pose_z_attitude", "base/samples/RigidBodyState"
     # Revolution motor states
