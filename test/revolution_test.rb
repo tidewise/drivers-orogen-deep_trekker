@@ -275,6 +275,27 @@ describe OroGen.deep_trekker.RevolutionTask do
         assert_equal -20, yaw
     end
 
+    it "writes the compensated command" do
+        syskit_configure_and_start(@task)
+        cmd = Types.base.LinearAngular6DCommand.new
+        cmd.zero!
+        cmd.linear = Eigen::Vector3.new(1, 0.3, 0.4)
+        cmd.angular = Eigen::Vector3.new(0, 0, 0.2)
+
+        expect_execution do
+            syskit_write task.drive_command_port, cmd
+        end.to do
+            have_one_new_sample(task.command_port).matching do |c|
+                assert_in_delta 1, c.linear.x, 1e-3
+                assert_in_delta 0.33, c.linear.y, 1e-3
+                assert_in_delta 0.3, c.linear.z, 1e-3
+                assert_in_delta 0, c.angular.x, 1e-3
+                assert_in_delta 0, c.angular.y, 1e-3
+                assert_in_delta 0.2, c.angular.z, 1e-3
+            end
+        end
+    end
+
     it "turns auto stabilization off when the drive command port is not connected" do
         syskit_configure_and_start(@task)
 

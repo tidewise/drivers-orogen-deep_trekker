@@ -93,6 +93,8 @@ task_context "RevolutionTask" do
     output_port "motors_disabled_state", "bool"
     # Whether auto stabilization is enabled
     output_port "auto_stabilization_state", "bool"
+    # The command issued to the ROV after compensation
+    output_port "command", "base/commands/LinearAngular6DCommand"
 
     periodic 0.005
 end

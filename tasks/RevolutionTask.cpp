@@ -179,14 +179,15 @@ void RevolutionTask::evaluateDriveCommand()
             true);
     sendRawDataOutput(enable_auto_stabilization);
 
-    m_compensated_command = compensateDriveCommand(drive);
+    auto compensated_command = compensateDriveCommand(drive);
 
     string drive_command =
         m_message_parser.parseDriveRevolutionCommandMessage(m_api_version,
             m_devices_id.revolution,
             m_devices_model.revolution,
-            m_compensated_command);
+            compensated_command);
     sendRawDataOutput(drive_command);
+    _command.write(compensated_command);
 }
 
 void RevolutionTask::evaluateDriveModeCommand()
@@ -429,7 +430,6 @@ Revolution RevolutionTask::getRevolutionStates()
     revolution.vertical_left_motor_overcurrent =
         m_message_parser.getMotorOvercurrentStates(rev_address,
             "verticalLeftMotorDiagnostics");
-    revolution.compensated_command = m_compensated_command;
 
     revolution.left_battery =
         m_message_parser.getBatteryStates(rev_address, "leftBattery");
