@@ -128,7 +128,6 @@ namespace deep_trekker {
         std::vector<GetRequestConfig> m_get_requests;
         base::Quaterniond m_nwu_magnetic2nwu_ori;
         base::MatrixXd m_compensation_matrix;
-        base::commands::LinearAngular6DCommand m_compensated_command;
 
         void receiveDeviceStateInfo();
         DevicesID parseDevicesID(Json::Value const& parsed_data,
