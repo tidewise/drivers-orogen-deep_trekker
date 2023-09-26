@@ -163,7 +163,7 @@ describe OroGen.deep_trekker.RevolutionTask do
                         },
                         "63B234C0A269": {
                             "acConnected": true,
-                            "distance": 300,
+                            "distance": 100,
                             "leak": false,
                             "cpuTemp": 10,
                             "battery1": {

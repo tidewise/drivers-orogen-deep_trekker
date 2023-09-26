@@ -491,9 +491,12 @@ bool RevolutionTask::getRevolutionMotorsDisabled()
 PoweredReel RevolutionTask::getPoweredReelStates()
 {
     string pwr_reel = m_devices_id.powered_reel;
-
     PoweredReel powered_reel;
     powered_reel.time = Time::now();
+    /**
+     * The tether length sent by the driver could have a offset if it is uncalibrated.
+     * So, to calculate the real amount of tether deployed, the offset is removed here.
+     */
     powered_reel.tether_length =
         m_message_parser.getTetherLength(pwr_reel) - m_tether_length_offset;
     powered_reel.leak = m_message_parser.isLeaking(pwr_reel);
