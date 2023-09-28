@@ -19,6 +19,8 @@ task_context "RevolutionTask" do
     property "devices_id", "deep_trekker/DevicesID"
     # For how long an input will be repeated before timing out
     property "input_timeout", "base/Time"
+    # Tether length offset  
+    property "tether_length_offset", "double"
     # Camera head tilt limits
     property "camera_head_limits", "deep_trekker/CameraHeadLimits"
     # Constant offset command for vertical thrusters to counteract buoyancy,

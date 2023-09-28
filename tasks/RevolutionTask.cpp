@@ -52,6 +52,7 @@ bool RevolutionTask::configureHook()
     m_camera_head_limits = _camera_head_limits.get();
     m_nwu_magnetic2nwu_ori =
         Eigen::AngleAxisd(_nwu_magnetic2nwu.get().getRad(), Eigen::Vector3d::UnitZ());
+    m_tether_length_offset = _tether_length_offset.get();
 
     // Warning: By default, the storage order in Eigen is column-major.
     // This means that it is in effect transposed on load when compared
@@ -493,7 +494,8 @@ PoweredReel RevolutionTask::getPoweredReelStates()
 
     PoweredReel powered_reel;
     powered_reel.time = Time::now();
-    powered_reel.tether_length = m_message_parser.getTetherLength(pwr_reel);
+    powered_reel.tether_length =
+        m_message_parser.getTetherLength(pwr_reel) - m_tether_length_offset;
     powered_reel.leak = m_message_parser.isLeaking(pwr_reel);
     powered_reel.cpu_temperature = m_message_parser.getCpuTemperature(pwr_reel);
     powered_reel.battery_1 = m_message_parser.getBatteryStates(pwr_reel, "battery1");
@@ -522,7 +524,8 @@ ManualReel RevolutionTask::getManualReelStates()
     string man_reel = m_devices_id.manual_reel;
 
     ManualReel manual_reel;
-    manual_reel.tether_length = m_message_parser.getTetherLength(man_reel);
+    manual_reel.tether_length =
+        m_message_parser.getTetherLength(man_reel) - m_tether_length_offset;
     manual_reel.leak = m_message_parser.isLeaking(man_reel);
     manual_reel.cpu_temperature = m_message_parser.getCpuTemperature(man_reel);
     return manual_reel;

@@ -12,8 +12,7 @@ describe OroGen.deep_trekker.RevolutionTask do
     run_live
 
     attr_reader :task
-
-    before do
+    before do # rubocop:disable Metric/BlockLength
         @task = syskit_deploy(
             OroGen.deep_trekker
                   .RevolutionTask
@@ -50,7 +49,7 @@ describe OroGen.deep_trekker.RevolutionTask do
 
     # revolution msg expected by the deep_trekker
     # queried in the component start step
-    def raw_packet_input
+    def raw_packet_input 
         cmd = JSON.dump(
             {
                 payload: {
@@ -164,7 +163,7 @@ describe OroGen.deep_trekker.RevolutionTask do
                         },
                         "63B234C0A269": {
                             "acConnected": true,
-                            "distance": 100,
+                            "distance": 300,
                             "leak": false,
                             "cpuTemp": 10,
                             "battery1": {
@@ -610,7 +609,25 @@ describe OroGen.deep_trekker.RevolutionTask do
         end
     end
 
-    it "outputs revolution states" do
+    it "outputs the corrected tether length" do
+        @task.properties.tether_length_offset = 0.1
+        syskit_configure_and_start(@task)
+        raw_cmd = raw_packet_input
+
+        sample = expect_execution do
+            syskit_write task.data_in_port, raw_cmd
+        end.to do
+            have_one_new_sample task.tether_length_port
+        end
+        json_from_raw = JSON.parse(raw_cmd.data.to_byte_array[8..-1])
+        json_tether_length = json_from_raw["payload"]["devices"]["63B234C0A269"] \
+                                  ["distance"]
+        corrected_tether_length =
+            (json_tether_length / 100) - @task.properties.tether_length_offset
+        assert_equal sample, corrected_tether_length
+    end
+
+    it "outputs powered reel states" do
         syskit_configure_and_start(@task)
         raw_cmd = raw_packet_input
 
